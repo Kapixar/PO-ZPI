@@ -4,12 +4,14 @@ Backend and frontend app for designing software course.
 
 # Frontend
 
-Run the project:`
+Run the project:
 `cd frontend`
-`npm i`- for updating dependencies (and first time usage)`npm run dev`
 
-### Dependencies docs
+`npm i` - for updating dependencies (and first time usage)
 
+`npm run dev`
+
+### Dependencies
 - BeerCSS
   - [Github](https://github.com/beercss/beercss)
   - [Demo and docs](https://www.beercss.com/)
