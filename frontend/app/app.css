@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+:root,
+body.light {
+    --primary: rgb(144 74 72);
+    --on-primary: rgb(255 255 255);
+    --primary-container: rgb(255 218 215);
+    --on-primary-container: rgb(115 51 50);
+    --secondary: rgb(119 86 84);
+    --on-secondary: rgb(255 255 255);
+    --secondary-container: rgb(255 218 215);
+    --on-secondary-container: rgb(93 63 62);
+    --tertiary: rgb(115 90 46);
+    --on-tertiary: rgb(255 255 255);
+    --tertiary-container: rgb(255 222 169);
+    --on-tertiary-container: rgb(89 67 25);
+    --error: rgb(186 26 26);
+    --on-error: rgb(255 255 255);
+    --error-container: rgb(255 218 214);
+    --on-error-container: rgb(147 0 10);
+    --background: rgb(255 248 247);
+    --on-background: rgb(35 25 25);
+    --surface: rgb(255 248 247);
+    --on-surface: rgb(35 25 25);
+    --surface-variant: rgb(244 221 219);
+    --on-surface-variant: rgb(83 67 66);
+    --outline: rgb(133 115 114);
+    --outline-variant: rgb(216 193 192);
+    --shadow: rgb(0 0 0);
+    --scrim: rgb(0 0 0);
+    --inverse-surface: rgb(56 46 45);
+    --inverse-on-surface: rgb(255 237 235);
+    --inverse-primary: rgb(255 179 175);
+    --surface-dim: rgb(232 214 213);
+    --surface-bright: rgb(255 248 247);
+    --surface-container-lowest: rgb(255 255 255);
+    --surface-container-low: rgb(255 240 239);
+    --surface-container: rgb(252 234 232);
+    --surface-container-high: rgb(246 228 227);
+    --surface-container-highest: rgb(240 222 221);
+}
+
+body.dark {
+    --primary: rgb(255 179 175);
+    --on-primary: rgb(87 29 29);
+    --primary-container: rgb(115 51 50);
+    --on-primary-container: rgb(255 218 215);
+    --secondary: rgb(231 189 186);
+    --on-secondary: rgb(68 41 40);
+    --secondary-container: rgb(93 63 62);
+    --on-secondary-container: rgb(255 218 215);
+    --tertiary: rgb(227 194 140);
+    --on-tertiary: rgb(65 45 5);
+    --tertiary-container: rgb(89 67 25);
+    --on-tertiary-container: rgb(255 222 169);
+    --error: rgb(255 180 171);
+    --on-error: rgb(105 0 5);
+    --error-container: rgb(147 0 10);
+    --on-error-container: rgb(255 218 214);
+    --background: rgb(26 17 17);
+    --on-background: rgb(240 222 221);
+    --surface: rgb(26 17 17);
+    --on-surface: rgb(240 222 221);
+    --surface-variant: rgb(83 67 66);
+    --on-surface-variant: rgb(216 193 192);
+    --outline: rgb(160 140 139);
+    --outline-variant: rgb(83 67 66);
+    --shadow: rgb(0 0 0);
+    --scrim: rgb(0 0 0);
+    --inverse-surface: rgb(240 222 221);
+    --inverse-on-surface: rgb(56 46 45);
+    --inverse-primary: rgb(144 74 72);
+    --surface-dim: rgb(26 17 17);
+    --surface-bright: rgb(66 55 54);
+    --surface-container-lowest: rgb(20 12 12);
+    --surface-container-low: rgb(35 25 25);
+    --surface-container: rgb(39 29 29);
+    --surface-container-high: rgb(50 40 39);
+    --surface-container-highest: rgb(61 50 49);
+}
