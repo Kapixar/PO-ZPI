@@ -29,20 +29,26 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-        <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.13.1/dist/cdn/beer.min.js"></script>
-      </head>
-      <body className="light">
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
+      <html lang="en">
+          <head>
+              <meta charSet="utf-8" />
+              <meta
+                  name="viewport"
+                  content="width=device-width, initial-scale=1"
+              />
+              <Meta />
+              <Links />
+              <script
+                  type="module"
+                  src="https://cdn.jsdelivr.net/npm/beercss@3.13.1/dist/cdn/beer.min.js"
+              ></script>
+          </head>
+          <body className="light surface-container">
+              {children}
+              <ScrollRestoration />
+              <Scripts />
+          </body>
+      </html>
   );
 }
 
