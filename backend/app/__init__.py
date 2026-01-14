@@ -12,5 +12,11 @@ def create_app(config_name='default'):
     
     db.init_app(app)
     migrate.init_app(app, db)
+
+    with app.app_context():
+        from app.models import Account, Student, Teacher, Topic, Declaration
     
+    from app.routes import health_bp
+    app.register_blueprint(health_bp)
+
     return app

@@ -28,7 +28,6 @@ instance/
 
 # Flask-SQLAlchemy / Migrations
 migrations/__pycache__/
-alembic.ini
 
 # Environment variables
 .env
