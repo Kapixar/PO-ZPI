@@ -6,9 +6,9 @@ export type SideBarItem = {
 
 export function SideBar({ items }: { items?: SideBarItem[] }) {
     const data: SideBarItem[] = items ?? [
-        { icon: "home", name: "Pulpit" },
-        { icon: "search", name: "Tematy" },
-        { icon: "more_vert", name: "Mój profil" },
+        { icon: "home", name: "Pulpit", href: "/dashboard" },
+        { icon: "search", name: "Tematy", href: "/dashboard" },
+        { icon: "more_vert", name: "Mój profil", href: "/my-profile" },
     ];
 
     return (
