@@ -1,5 +1,11 @@
+import enum
 from app import db
 from datetime import datetime
+
+class TopicStatus(enum.Enum):
+    OCZEKUJACY = "Oczekujący"
+    ZATWIERDZONY = "Zatwierdzony"
+    ODRZUCONY = "Odrzucony"
 
 class Topic(db.Model):
     __tablename__ = 'topic'
@@ -11,6 +17,10 @@ class Topic(db.Model):
     creation_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id', ondelete='SET NULL'), nullable=True)
     declaration_id = db.Column(db.Integer, db.ForeignKey('declaration.id', ondelete='SET NULL'), nullable=True, unique=True)
+    status = db.Column(db.Enum(), nullable=True)
+    topic_justification = db.Column(db.Text, nullable=True)
+    rejection_reason = db.Column(db.Text, nullable=True)
+
     
     # Relationships
     declaration = db.relationship('Declaration', backref='topic', uselist=False)
