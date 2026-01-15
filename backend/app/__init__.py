@@ -18,8 +18,11 @@ def create_app(config_name='default'):
     with app.app_context():
         from app.models import Account, Student, Teacher, Topic, Declaration
     
-    from app.routes import health_bp, topics_bp
+    from app.routes import health_bp, topics
     app.register_blueprint(health_bp)
-    app.register_blueprint(topics_bp) 
+    app.register_blueprint(topics.topics_bp)
+
+    from flask_cors import CORS
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     return app

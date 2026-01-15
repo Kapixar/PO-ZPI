@@ -1,0 +1,111 @@
+Specyfikacja wymagań
+
+Przeglądanie serwisu:
+•	Jako Student chcę przeglądać listę zajętych prowadzących, aby znać swoje opcje wyboru.
+•	Jako Student chcę przeglądać listę otwartych tematów ZPI, aby dowiedzieć się, które grupy szukają członków.
+•	Jako Prowadzący chcę mieć wgląd w moje zgłoszone tematy i ich status, aby móc monitorować ich stan.
+•	Jako Student chcę mieć wgląd w mój temat i deklaracje ZPI i ich statusy, aby upewnić się, że proces zapisu przebiega pomyślnie.
+•	Jako Prowadzący chcę mieć wgląd w moje deklaracje ZPI i ich status, aby monitorować, czy wszyscy studenci z grupy zaakceptowali już swój udział w projekcie.
+•	Jako Opiekun kierunku w dziale obsługi studenta chcę mieć wgląd w listę studentów i ich przypisania do grup w celu kontrolowania ich przypisań oraz wydrukowania o nich raportu.
+•	Jako Członek KPK chcę móc przeglądać tematy oczekujące na zatwierdzenie i zatwierdzone, aby móc się z nimi zapoznać.
+
+Logowanie:
+•	Jako Użytkownik chcę mieć możliwość wylogowania, aby móc zakończyć korzystanie z systemu.
+•	Jako Internauta chcę mieć możliwość zalogowania, aby móc rozpocząć korzystać z systemu.
+
+Obsługa tematów ZPI:
+•	Jako Prowadzący chcę móc dodawać, modyfikować i usuwać tematy, aby móc zarządzać procesem formułowania i zgłaszania tematów.
+•	Jako Prowadzący chcę móc przypisać studentów do tematów, aby móc utworzyć zespoły mające realizować dane tematy.
+•	Jako Prowadzący chcę móc odpinać studentów od tematów, aby móc modyfikować składy osobowe zespołów.
+•	Jako Prowadzący chcę móc oznaczyć temat jako otwarty, aby wyrazić otwartość na dołączenie nowych członków.
+•	Jako Prowadzący chcę móc cofnąć oznaczenie otwartości tematu, aby pokazać, że zespół nie jest otwarty na dołączenie nowych członków.
+•	Jako Prowadzący chcę mieć możliwość wyświetlania uzasadnienia odrzucenia tematu przez KPK, aby móc dostosować temat do wymagań.
+•	Jako Członek KPK chcę móc zatwierdzać tematy zgłoszone przez prowadzącego, aby potwierdzić ich zgodność z wymaganiami programowymi i dopuścić je do realizacji. 
+•	Jako Członek KPK chcę móc odrzucać tematy zgłoszone przez prowadzącego, aby stwierdzić ich niezgodność z wymaganiami.
+•	Jako Członek KPK chcę móc formułować uzasadnienie odrzucenia tematu, aby móc wskazać, co jest nieprawidłowe.
+
+Obsługa niestandardowych tematów ZPI:
+•	Jako Prowadzący chcę mieć możliwość wyświetlenia, dodania, edycji i usunięcia uzasadnienia mojej niestandardowej grupy, aby móc wyjaśnić i modyfikować przyczyny danego doboru studentów do określonego tematu.
+•	Jako Członek KPK chcę móc przeglądać uzasadnienia zgłoszone przez prowadzącego, aby móc się z nimi zapoznać.
+•	Jako Członek KPK chcę móc zatwierdzać uzasadnienie prowadzącego, aby zezwolić na utworzenie niestandardowej grupy.
+•	Jako Członek KPK chcę móc odrzucić uzasadnienie prowadzącego, aby nie zezwolić na utworzenie niestandardowej grupy.
+
+Obsługa elektronicznych deklaracji ZPI:
+•	Jako Prowadzący chcę móc potwierdzić deklarację ZPI, aby ostatecznie zaakceptować skład grupy i temat.
+•	Jako Student chcę móc potwierdzić deklarację ZPI, aby wyrazić zgodę na udział w danym zespole i realizację danego tematu.
+
+Komunikacja z systemami zewnętrznymi:
+•	Jako Administrator chcę móc importować dane z systemu USOS, aby móc je wykorzystać w systemie ZPI.
+•	Jako Koordynator przedmiotu chcę móc eksportować listę zespołów ZPI, aby móc wprowadzać grupy do systemu USOS.
+
+Zarządzanie i obsługa systemu:
+•	Jako Administrator chcę mieć możliwość zarządzać serwisem, żeby zapewnić jego prawidłowe działanie.
+
+
+
+
+Zarządzanie tematem	
+Jako Prowadzący chcę mieć wgląd w moje zgłoszone tematy i ich status, aby móc monitorować ich stan.
+
+Jako Prowadzący chcę mieć wgląd w moje deklaracje ZPI i ich status, aby monitorować, czy wszyscy studenci z grupy zaakceptowali już swój udział w projekcie.
+
+Jako Prowadzący chcę móc dodawać, modyfikować i usuwać tematy, aby móc zarządzać procesem formułowania i zgłaszania tematów.
+
+Jako Prowadzący chcę móc przypisać studentów do tematów, aby móc utworzyć zespoły mające realizować dane tematy.
+
+Jako Prowadzący chcę móc odpinać studentów od tematów, aby móc modyfikować składy osobowe zespołów.
+
+Jako Prowadzący chcę móc oznaczyć temat jako otwarty, aby wyrazić otwartość na dołączenie nowych członków.
+
+Jako Prowadzący chcę móc cofnąć oznaczenie otwartości tematu, aby pokazać, że zespół nie jest otwarty na dołączenie nowych członków.
+
+
+
+
+2.	Specyfikacja przypadków użycia
+
+2.1.1	<Zarządzanie tematem / Prowadzący> (odpowiedzialny: Franciszek Dobrzyński)
+
+Use-Case Model: ZPI_Topic_Management_System
+
+Use-Case: Topic_managing
+Documentation: "Main flow is looped until the actor chooses to run other action."
+
+Preconditions:
+- "An actor is logged into the system"
+
+Postcondition (success):
+- "The new topic is added"
+
+Trigger: Actor wants "to view his topics"
+Main flow:
+    1. System verifies "number of topics managed by the actor is positive"
+    2. "System presents topics of the actor, data connected to them and a list of options (add topic)"
+    3. Actor chooses "one of the topics"
+    4. "System presents chosen topic, data connected to it and a list of options"
+    5. Actor chooses "to return to view his topics"
+    6. The use-case ends with success.
+
+Flow A: No_topics
+    A1.1. System verifies "number of topics managed by the actor is equal to zero"
+    A2 "System informs that there are no topics of this actor"
+    A3. Goto 1.
+
+Flow B: Add_new_topic
+    B1.3. Actor chooses "to add new topic"
+    B2. System verifies "number of actor's topics is below limit"
+    B3. "System asks about topic data"
+    B4. "Actor provides topic data"
+    B5. "Actor confirms the decision"
+    B6. System verifies "topic data"
+    B7. "System creates new topic and informs about success"
+    B8. Goto 1.
+
+Flow BA: Limit_of_topics
+    BA1.B2. System verifies "number of actor's topics is equal to limit"
+    BA2. "System makes it impossible to add more topics"
+    BA3. Goto 1.
+
+
+
+
