@@ -20,8 +20,8 @@ class Teacher(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, db.ForeignKey('account.id', ondelete='CASCADE'), nullable=False, unique=True)
-    title = db.Column(db.Enum(Title), nullable=True)  
-    position = db.Column(db.Enum(Position), nullable=True)
+    title = db.Column(db.Enum(Title), nullable=False)  
+    position = db.Column(db.Enum(Position), nullable=False)
     is_declaration_approved = db.Column(db.Boolean, default=False)
     
     # Relationships

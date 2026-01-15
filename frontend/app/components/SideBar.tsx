@@ -13,6 +13,10 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
 
     return (
         <nav className="left max surface-container">
+            <a>
+                <i>menu</i>
+            </a>
+            <div className="large-space"></div>
             {data.map((item) => (
                 <a key={item.name} href={item.href ?? "#"}>
                     <i>{item.icon}</i>

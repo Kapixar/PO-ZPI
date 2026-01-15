@@ -11,7 +11,7 @@ class Declaration(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     status = db.Column(db.Enum(Status), nullable=False, default='pending') 
-    submission_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    submission_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     
     # Relationships 
     # topic - from Topic
