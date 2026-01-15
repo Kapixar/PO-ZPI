@@ -22,7 +22,6 @@ def create_app(config_name='default'):
     app.register_blueprint(health_bp)
     app.register_blueprint(topics.topics_bp)
 
-    from flask_cors import CORS
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     return app

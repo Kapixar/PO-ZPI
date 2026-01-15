@@ -3,12 +3,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import enum
 
 class UserType(enum.Enum):
-    STUDENT = 'student'
-    PROWADZACY = 'prowadzący'
-    CZLONEK_KPK = 'członek kpk'
-    KOORDYNATOR_PRZEDMIOTU = 'koordynator przedmiotu'
-    OPIEKUN_KIERUNKU = 'opiekun kierunku w dziale obsługi studenta'
-    ADMINISTRATOR = 'administrator'
+    STUDENT = 'STUDENT'
+    PROWADZACY = 'PROWADZACY'
+    CZLONEK_KPK = 'CZLONEK_KPK'
+    KOORDYNATOR_PRZEDMIOTU = 'KOORDYNATOR_PRZEDMIOTU'
+    OPIEKUN_KIERUNKU = 'OPIEKUN_KIERUNKU'
+    ADMINISTRATOR = 'ADMINISTRATOR'
 
 class Account(db.Model):
     __tablename__ = 'account'

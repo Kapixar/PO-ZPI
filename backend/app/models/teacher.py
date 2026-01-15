@@ -2,18 +2,18 @@ from app import db
 import enum
 
 class Title(enum.Enum):
-    mgr_inz = "mgr inż."
+    mgr_inz = "mgr_inz"
     mgr = "mgr"
     dr = "dr"
-    dr_inz = "dr inż."
-    dr_hab = "dr hab."
-    dr_hab_inz = "dr hab. inż."
-    prof = "prof."
+    dr_inz = "dr_inz."
+    dr_hab = "dr_hab"
+    dr_hab_inz = "dr_hab_inz"
+    prof = "prof"
 
 class Position(enum.Enum):
-    asystent = "Asystent"
-    adiunkt = "Adiunkt"
-    profesor_uczelni = "Profesor uczelni"    
+    ASYTSTENT = "ASYTSTENT"
+    ADIUNKT = "ADIUNKT"
+    PROFESOR_UCZELNI = "PROFESOR_UCZELNI"    
 
 class Teacher(db.Model):
     __tablename__ = 'teacher'
