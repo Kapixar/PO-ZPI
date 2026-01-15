@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TopicService } from "~/services/topic.service";
+import { topicService } from "~/services/topic.service";
 
 interface CreateTopicDialogProps {
     onClose: () => void;
@@ -15,7 +15,7 @@ export function CreateTopicDialog({ onClose, onCreated }: CreateTopicDialogProps
     const handleSubmit = async () => {
         if (!title || !description) return;
 
-        await TopicService.createTopic({
+        await topicService.createTopic({
             title,
             description,
             isStandard: true, // Defaulting for simplicity unless specific input needed

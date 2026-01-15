@@ -1,7 +1,7 @@
 import { SideBar } from "~/components/SideBar";
 import { TopicCard } from "~/components/TopicCard";
 import { CreateTopicDialog } from "~/components/CreateTopicDialog";
-import { TopicService, type Topic, type Supervisor } from "~/services/topic.service";
+import { topicService, type Topic, type Supervisor } from "~/services/topic.service";
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
 
@@ -17,9 +17,9 @@ export default function MyProfile() {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
 
     const fetchData = async () => {
-        const sup = await TopicService.getSupervisor();
+        const sup = await topicService.getSupervisor();
         setSupervisor(sup);
-        const tops = await TopicService.getTopics(sup.id);
+        const tops = await topicService.getTopics(sup.id);
         setTopics(tops);
     };
 
@@ -47,6 +47,7 @@ export default function MyProfile() {
 
                     {/* Content */}
                     <div className="w-full">
+                        {/*
                         {topics.length > 0 ? (
                             topics.map((topic, index) => (
                                 <TopicCard key={topic.id} topic={topic} index={index + 1} />
@@ -56,6 +57,7 @@ export default function MyProfile() {
                                 <h4 className="mb-2">Nie zarządzasz żadnymi tematami</h4>
                             </div>
                         )}
+                        */}
                     </div>
 
                     {/* FAB */}

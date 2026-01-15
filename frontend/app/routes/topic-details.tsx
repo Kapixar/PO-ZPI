@@ -1,11 +1,11 @@
 import { SideBar } from "~/components/SideBar";
-import { TopicService, type Topic } from "~/services/topic.service";
+import { topicService, type Topic } from "~/services/topic.service";
 import { useLoaderData, Link } from "react-router";
 import type { Route } from "./+types/topic-details";
 import { useEffect, useState } from "react";
 
 export async function clientLoader({ params }: Route.LoaderArgs) {
-    const topic = await TopicService.getTopic(params.id);
+    const topic = await topicService.getTopic(params.id);
     if (!topic) throw new Response("Not Found", { status: 404 });
     return topic;
 }
