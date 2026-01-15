@@ -1,5 +1,6 @@
 import { SideBar } from "~/components/SideBar";
 import type { Route } from "./+types/dashboard";
+import { ProjectListItem } from "~/components/ProjectListItem";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -12,7 +13,7 @@ export default function Dashboard() {
     return (
         <div className="">
             <SideBar />
-            <main className=" rounded-2xl">
+            <main className="rounded-2xl large-padding">
                 <nav>
                     <button className="circle transparent">
                         <i>arrow_back</i>
@@ -33,9 +34,38 @@ export default function Dashboard() {
                     <button className="chip">Max liczba osób</button>
                 </nav>
                 <div className="space"></div>
-                <hr />
+
+                <ProjectListItem
+                    slots={4}
+                    supervisor="dr hab. inż. Michał Szpak"
+                    title="Watchout - system rejestracji zdarzeń zagrażających bezpieczeństwu w przestrzeni publicznej"
+                />
+                <ProjectListItem
+                    slots={4}
+                    supervisor="dr hab. inż. Michał Kowlaski"
+                    title="VocalizeR"
+                />
+                <ProjectListItem
+                    slots={5}
+                    supervisor="dr hab. inż. Michał Kowlaski"
+                    title="Rozproszony system zarządzania personelem średnich przedsiębiorstw"
+                />
+                <ProjectListItem
+                    slots={3}
+                    supervisor="dr hab. inż. Michał Krzak"
+                    title="System wspomagania treningu wspinaczkowego"
+                />
+                <ProjectListItem
+                    slots={3}
+                    supervisor="dr hab. inż. Michał Kwiat"
+                    title="AI Present Finder - agent rekomendujący prezenty na podstawie wiedzy o odbiorcy"
+                />
+                <ProjectListItem
+                    slots={3}
+                    supervisor="dr hab. inż. Michał Przewoźniczek"
+                    title="System wspomagania treningu wspinaczkowego"
+                />
             </main>
         </div>
     );
 }
-
