@@ -1,29 +1,27 @@
-import type { PendingTopic } from "~/services/topic.service";
-
 type TopicCardProps = {
-    topic: PendingTopic;
+    studentCount: number | null
+    teacher: string | null
+    title: string
+    onArrowClick: () => void
 }
 
-export function TopicCard({ topic }: TopicCardProps) {
-    const onClick = () => {
-        alert("hello")
-    }
+export function TopicCard({ studentCount, teacher, title, onArrowClick }: TopicCardProps) {
     return (
         <div>
             <div>
-                {topic.student_count}
+                {studentCount}
             </div>
 
             <div>
                 <p>
-                    {topic.teacher_title} {topic.teacher_full_name}
+                    {teacher}
                 </p>
                 <h6>
-                    {topic.title}
+                    {title}
                 </h6>
             </div>
 
-            <button type="button" onClick={onClick}>
+            <button type="button" onClick={onArrowClick}>
                 {"->"}
             </button>
             <div className="space"></div>

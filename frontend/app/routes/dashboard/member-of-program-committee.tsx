@@ -38,6 +38,11 @@ export default function Dashboard() {
         getPending()
     }, [])
 
+    const onArrowClick = (topic: PendingTopic) => {
+        //logic with dialogs there
+        alert("HELLO")
+    }
+
     const standardTopics = topics.filter(t => t.student_count === 4);
     const nonStandardTopics = topics.filter(t => t.student_count !== 4);
 
@@ -70,7 +75,10 @@ export default function Dashboard() {
                         {standardTopics.map(topic => (
                             <TopicCard
                                 key={topic.id}
-                                topic={topic}
+                                studentCount={topic.student_count}
+                                teacher={topic.teacher_title + " " + topic.teacher_full_name}
+                                title={topic.title}
+                                onArrowClick={() => onArrowClick(topic)}
                             />
                         ))}
                     </div>
@@ -88,7 +96,10 @@ export default function Dashboard() {
                         {nonStandardTopics.map(topic => (
                             <TopicCard
                                 key={topic.id}
-                                topic={topic}
+                                studentCount={topic.student_count}
+                                teacher={topic.teacher_title + " " + topic.teacher_full_name}
+                                title={topic.title}
+                                onArrowClick={() => onArrowClick(topic)}
                             />
                         ))}
                     </div>

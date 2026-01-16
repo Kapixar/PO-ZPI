@@ -100,6 +100,59 @@ class TopicService {
         }
     }
 
+    async approveTopic(topicId: number): Promise<void> {
+        try {
+            const response = await fetch(`${this.baseUrl}/${topicId}/approve`, {
+                method: "PATCH",
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Error approving topic ${topicId}:`, error);
+            throw error;
+        }
+    }
+
+    async approveTopics(topicIds: number[]): Promise<void> {
+        try {
+            const response = await fetch(`${this.baseUrl}/approve-bulk`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ topic_ids: topicIds }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error("Error approving topics in bulk:", error);
+            throw error;
+        }
+    }
+
+    async rejectTopic(topicId: number, rejectionReason: string): Promise<void> {
+        try {
+            const response = await fetch(`${this.baseUrl}/${topicId}/reject`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ rejection_reason: rejectionReason }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Error rejecting topic ${topicId}:`, error);
+            throw error;
+        }
+    }
+
     getDemoPendingTopics(): PendingTopic[] {
         return [
             // Standardowe (4 studentów)
