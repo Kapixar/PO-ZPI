@@ -29,11 +29,15 @@ export default function Test() {
           </nav>
           <main className="responsive">
               <nav className="group split">
-                  <button className="left-round">Button</button>
+                  <button data-ui="dialog" className="left-round">Button</button>
                   <button className="right-round">
                       <i>keyboard_arrow_down</i>
                   </button>
               </nav>
+              <dialog id="dialog">
+                    <h5>Zmień użytkownika</h5>
+
+                </dialog>
           </main>
       </>
   );
