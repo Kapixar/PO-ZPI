@@ -5,7 +5,13 @@ import React, {
     type ReactNode,
 } from "react";
 
-export type UserRole = "Student" | "KPK" | "Prowadzący";
+export enum UserRole {
+    Student = "Student",
+    KPK = "KPK",
+    Prowadzący = "Prowadzący",
+    Administrator = "Administrator",
+    Koordynator = "Koordynator",
+}
 
 export interface User {
     role: UserRole;
@@ -14,26 +20,24 @@ export interface User {
 interface UserContextType {
     user: User;
     setUser: (user: User) => void;
-    hasRole: (role: UserRole | UserRole[]) => boolean;
+    hasRole: (...roles: UserRole[]) => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Mock users for testing
 export const mockUsers: User[] = [
-    { role: "Student" },
-    { role: "KPK" },
-    { role: "Prowadzący" },
+    { role: UserRole.Student },
+    { role: UserRole.KPK },
+    { role: UserRole.Prowadzący },
+    { role: UserRole.Administrator },
+    { role: UserRole.Koordynator },
 ];
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User>(mockUsers[0]); // Default to Student
 
-    const hasRole = (role: UserRole | UserRole[]) => {
-        if (Array.isArray(role)) {
-            return role.includes(user.role);
-        }
-        return user.role === role;
+    const hasRole = (...roles: UserRole[]) => {
+        return roles.includes(user.role);
     };
 
     return (

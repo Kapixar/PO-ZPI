@@ -9,20 +9,12 @@ export type SideBarItem = {
 
 export function SideBar({ items }: { items?: SideBarItem[] }) {
     const { user } = useUser();
-    const dialogId = "user-switcher-dialog";
 
     const data: SideBarItem[] = items ?? [
-        { icon: "home", name: "Pulpit", href: "/dashboard" },
-        { icon: "search", name: "Tematy", href: "/dashboard" },
+        { icon: "home", name: "Pulpit", href: "/topics" },
         { icon: "more_vert", name: "Mój profil", href: "/my-profile" },
+        { icon: "more_vert", name: "Jeden temat", href: "/topic/5" },
     ];
-
-    const openDialog = () => {
-        const dialog = document.getElementById(dialogId) as any;
-        if (dialog) {
-            dialog.showModal();
-        }
-    };
 
     return (
         <>
@@ -38,12 +30,12 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
                     </a>
                 ))}
                 <div className="small-space"></div>
-                <a onClick={openDialog} style={{ cursor: "pointer" }}>
+                <a data-ui="#user-dialog">
                     <i>account_circle</i>
                     <div>{user.role}</div>
                 </a>
             </nav>
-            <UserSwitcherDialog dialogId={dialogId} />
+            <UserSwitcherDialog dialogId={"user-dialog"} />
         </>
     );
 }
