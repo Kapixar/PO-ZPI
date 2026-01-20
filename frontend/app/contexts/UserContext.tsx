@@ -8,9 +8,9 @@ import React, {
 export enum UserRole {
     Student = "Student",
     KPK = "KPK",
-    Prowadzący = "Prowadzący",
-    Administrator = "Administrator",
-    Koordynator = "Koordynator",
+    Supervisor = "Prowadzący",
+    Admin = "Administrator",
+    Coordinator = "Koordynator",
 }
 
 export interface User {
@@ -28,9 +28,9 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const mockUsers: User[] = [
     { role: UserRole.Student },
     { role: UserRole.KPK },
-    { role: UserRole.Prowadzący },
-    { role: UserRole.Administrator },
-    { role: UserRole.Koordynator },
+    { role: UserRole.Supervisor },
+    { role: UserRole.Admin },
+    { role: UserRole.Coordinator },
 ];
 
 export function UserProvider({ children }: { children: ReactNode }) {

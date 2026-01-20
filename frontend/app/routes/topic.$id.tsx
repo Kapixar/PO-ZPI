@@ -1,6 +1,9 @@
 import { SideBar } from "~/components/SideBar";
 import type { Route } from "./+types/topic.$id";
 import { UserRole, useUser } from "~/contexts/UserContext";
+import { useEffect, useState } from "react";
+import { topicService, type Topic } from "~/services/topic.service";
+import { useNavigate } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -55,6 +58,34 @@ const ApproveDialog = () => {
 
 export default function TopicDetail({ params }: Route.ComponentProps) {
     const { hasRole } = useUser();
+    const navigate = useNavigate();
+    const [topic, setTopic] = useState<Topic | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        async function loadTopic() {
+            try {
+                setLoading(true);
+                setError(null);
+                const fetchedTopic = await topicService.getTopic(params.id);
+                if (!fetchedTopic) {
+                    setError("Nie znaleziono tematu");
+                } else {
+                    setTopic(fetchedTopic);
+                }
+            } catch (err) {
+                setError(
+                    err instanceof Error ? err.message : "Failed to load topic",
+                );
+                console.error("Error loading topic:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadTopic();
+    }, [params.id]);
 
     const isDeclarationApproved = false;
 
@@ -64,7 +95,10 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
             <main className="rounded-2xl large-padding">
                 <ApproveDialog />
                 <nav>
-                    <button className="circle transparent">
+                    <button
+                        className="circle transparent"
+                        onClick={() => navigate(-1)}
+                    >
                         <i>arrow_back</i>
                     </button>
                     <div className="max"></div>
@@ -73,67 +107,114 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                     </button>
                 </nav>
 
-                <h3>Opracowanie aplikacji symulującej rozgrywkę giełdową</h3>
+                {loading && (
+                    <div className="center-align">
+                        <progress className="circle wavy large"></progress>
+                        <p>Ładowanie tematu...</p>
+                    </div>
+                )}
 
-                <p>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                    do eiusmod tempor incididunt ut labore et dolore magna
-                    aliqua. Ut enim ad minim veniam, quis nostrud exercitation
-                    ullamco laboris nisi ut aliquip ex ea commodo consequat.
-                </p>
-
-                <h5>Zespół</h5>
-                <div className="flex flex-row gap-10">
-                    <TeamMember name="Jan Kowalski" role="dr hab" />
-                    <TeamMember name="Jan Kowalski" role="263043" />
-                    <TeamMember name="Jan Kowalski" role="263043" />
-                    <TeamMember name="Jan Kowalski" role="263043" />
-                </div>
-
-                <h5>Zarządzanie</h5>
-
-                <nav className="group">
-                    {hasRole(UserRole.Student, UserRole.Prowadzący) && (
-                        <button
-                            className="fill small-round"
-                            disabled={isDeclarationApproved}
-                            data-ui="#approve-declaration-dialog"
-                        >
-                            <i>check_box</i>
-                            <span>Zatwierdź deklarację</span>
-                        </button>
-                    )}
-                    <button className="fill small-round">
-                        <i>format_size</i>
-                        <span>Uzasadnij niestandardowy rozmiar zespołu</span>
-                    </button>
-                    <button className="fill small-round">
-                        <i>group</i>
-                        <span>Zmień stan</span>
-                    </button>
-                </nav>
-
-                <h5>Informacje</h5>
-                <ul className="list border">
-                    <li>
-                        <div className="max">
-                            <h6 className="small">Stan zespołu</h6>
-                            <div>Oczekuje na nowych członków</div>
+                {error && (
+                    <article className="border error">
+                        <div>
+                            <i className="extra">error</i>
+                            <h6>Błąd</h6>
+                            <p>{error}</p>
                         </div>
-                    </li>
-                    <li>
-                        <div className="max">
-                            <h6 className="small">Status tematu</h6>
-                            <div>Oczekuje na zatwierdzenie KPK</div>
+                    </article>
+                )}
+
+                {!loading && !error && topic && (
+                    <>
+                        <h3>{topic.title}</h3>
+
+                        <p>{topic.description}</p>
+
+                        <h5>Zespół</h5>
+                        <div className="flex flex-row gap-10">
+                            <TeamMember
+                                name={`${topic.supervisor.firstName} ${topic.supervisor.lastName}`}
+                                role={topic.supervisor.title}
+                            />
+                            {topic.team.map((student) => (
+                                <TeamMember
+                                    key={student.id}
+                                    name={`${student.firstName} ${student.lastName}`}
+                                    role={student.id}
+                                />
+                            ))}
                         </div>
-                    </li>
-                    <li>
-                        <div className="max">
-                            <h6 className="small">Data utworzenia tematu</h6>
-                            <div>10.06.2025</div>
-                        </div>
-                    </li>
-                </ul>
+
+                        <h5>Zarządzanie</h5>
+
+                        <nav className="group">
+                            {hasRole(UserRole.Student, UserRole.Supervisor) && (
+                                <button
+                                    className="fill small-round"
+                                    disabled={isDeclarationApproved}
+                                    data-ui="#approve-declaration-dialog"
+                                >
+                                    <i>check_box</i>
+                                    <span>Zatwierdź deklarację</span>
+                                </button>
+                            )}
+                            {!topic.isStandard && (
+                                <button className="fill small-round">
+                                    <i>format_size</i>
+                                    <span>
+                                        Uzasadnij niestandardowy rozmiar zespołu
+                                    </span>
+                                </button>
+                            )}
+                            <button className="fill small-round">
+                                <i>group</i>
+                                <span>Zmień stan</span>
+                            </button>
+                        </nav>
+
+                        <h5>Informacje</h5>
+                        <ul className="list border">
+                            <li>
+                                <div className="max">
+                                    <h6 className="small">Stan zespołu</h6>
+                                    <div>
+                                        {topic.isOpen
+                                            ? "Oczekuje na nowych członków"
+                                            : "Zespół kompletny"}
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="max">
+                                    <h6 className="small">Status tematu</h6>
+                                    <div>{topic.status}</div>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="max">
+                                    <h6 className="small">
+                                        Liczba członków zespołu
+                                    </h6>
+                                    <div>
+                                        {topic.team.length} / {topic.maxMembers}
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <div className="max">
+                                    <h6 className="small">
+                                        Data utworzenia tematu
+                                    </h6>
+                                    <div>
+                                        {new Date(
+                                            topic.creationDate,
+                                        ).toLocaleDateString("pl-PL")}
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </>
+                )}
             </main>
         </div>
     );
