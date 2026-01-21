@@ -1,4 +1,4 @@
-import { useUser } from "~/contexts/UserContext";
+import { UserRole, useUser } from "~/contexts/UserContext";
 import { UserSwitcherDialog } from "./UserSwitcherDialog";
 
 export type SideBarItem = {
@@ -8,13 +8,25 @@ export type SideBarItem = {
 };
 
 export function SideBar({ items }: { items?: SideBarItem[] }) {
-    const { user } = useUser();
+    const { user, hasRole } = useUser();
 
-    const data: SideBarItem[] = items ?? [
-        { icon: "home", name: "Pulpit", href: "/topics" },
-        { icon: "more_vert", name: "Mój profil", href: "/my-profile" },
-        { icon: "more_vert", name: "Jeden temat", href: "/topic/5" },
-    ];
+
+    const data: SideBarItem[] = items ? items
+        : hasRole(UserRole.KPK) ? [
+            { icon: "home", name: "Pulpit" },
+            { icon: "list", name: "Tematy" },
+            { icon: "account_circle", name: "Mój profil" },
+            { icon: "hourglass_empty", name: "Oczekujące", href: "/pending" },
+            { icon: "check_circle", name: "Przyjęte" },
+        ] : hasRole(UserRole.Coordinator) ? [
+            { icon: "home", name: "Pulpit" },
+            { icon: "list", name: "Zespoły", href: "/topics" },
+            { icon: "account_circle", name: "Mój profil" },
+        ] : [
+            { icon: "home", name: "Pulpit", href: "/topics" },
+            { icon: "account_circle", name: "Mój profil", href: "/my-profile" },
+            { icon: "more_vert", name: "Jeden temat", href: "/topic/5" },
+        ];
 
     return (
         <>
