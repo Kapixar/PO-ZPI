@@ -1,9 +1,9 @@
 import { SideBar } from "~/components/SideBar";
-import { TopicCard } from "~/components/TopicCard";
 import { CreateTopicDialog } from "~/components/CreateTopicDialog";
 import { topicService, type Topic, type Supervisor } from "~/services/topic.service";
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
+import { Link, useNavigate } from "react-router";
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -15,12 +15,17 @@ export default function MyProfile() {
     const [topics, setTopics] = useState<Topic[]>([]);
     const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
+    const navigate = useNavigate();
 
     const fetchData = async () => {
-        const sup = await topicService.getSupervisor();
-        setSupervisor(sup);
-        const tops = await topicService.getTopics(sup.id);
-        setTopics(tops);
+        try {
+            const sup = await topicService.getSupervisor();
+            setSupervisor(sup);
+            const tops = await topicService.getTopics(sup.id);
+            setTopics(tops);
+        } catch (error) {
+            console.error("Failed to fetch data", error);
+        }
     };
 
     useEffect(() => {
@@ -30,43 +35,59 @@ export default function MyProfile() {
     return (
         <div className="flex h-screen bg-surface overflow-hidden">
             <SideBar />
-            <main className="flex-1 p-0 overflow-hidden flex flex-col items-center">
-                <div className="w-full max-w-4xl pt-4 px-4 h-full flex flex-col relative overflow-y-auto pb-20">
-                    {/* Header */}
-                    <header className="mb-8 mt-4">
-                        <div className="flex items-center mb-4">
-                            <button className="circle transparent">
-                                <i>arrow_back</i>
-                            </button>
+            <main className="responsive max">
+                <header>
+                    <nav>
+                        <button className="circle transparent" onClick={() => navigate(-1)}>
+                            <i>arrow_back</i>
+                        </button>
+                        <div className="max">
+                            <h5 className="no-margin">Mój profil</h5>
                         </div>
-                        <h1 className="text-5xl font-bold mb-2">Mój profil</h1>
-                        <div className="text-on-surface-variant text-lg">
-                            {supervisor?.title} {supervisor?.firstName} {supervisor?.lastName}
-                        </div>
-                    </header>
+                        <button className="circle transparent">
+                            <i>more_vert</i>
+                        </button>
+                    </nav>
+                </header>
 
-                    {/* Content */}
-                    <div className="w-full">
-                        {/*
+                <div className="padding">
+                    <h5 className="mb-2">{supervisor ? `${supervisor.title} ${supervisor.firstName} ${supervisor.lastName}` : 'Ładowanie...'}</h5>
+                    <div className="text-medium-emphasis mb-8">
+                        {supervisor && (
+                            <span>{supervisor.title} {supervisor.firstName} {supervisor.lastName}</span>
+                        )}
+                    </div>
+
+                    <ul className="list medium-space">
                         {topics.length > 0 ? (
                             topics.map((topic, index) => (
-                                <TopicCard key={topic.id} topic={topic} index={index + 1} />
+                                <li key={topic.id}>
+                                    <Link to={`/topic/${topic.id}`} className="row wave">
+                                        <button className="circle tertiary">{index + 1}</button>
+                                        <div className="max">
+                                            <div className="small-text">{supervisor?.title} {supervisor?.firstName} {supervisor?.lastName}</div>
+                                            <div className="text-medium">{topic.title}</div>
+                                        </div>
+                                        {topic.status === "OCZEKUJACY" && (
+                                            <span style={{ color: "var(--error)" }}>Oczekuje na twoje zatwierdzenie</span>
+                                        )}
+                                        <i>arrow_forward</i>
+                                    </Link>
+                                </li>
                             ))
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                                <h4 className="mb-2">Nie zarządzasz żadnymi tematami</h4>
+                            <div className="center-align padding">
+                                <p>Nie masz jeszcze żadnych tematów.</p>
                             </div>
                         )}
-                        */}
-                    </div>
+                    </ul>
+                </div>
 
-                    {/* FAB */}
-                    <div className="fixed right-6 bottom-6">
-                        <button className="extended FAB surface-container-highest" onClick={() => setShowCreateDialog(true)}>
-                            <i>add</i>
-                            <span>Dodaj temat</span>
-                        </button>
-                    </div>
+                <div className="fixed right bottom padding">
+                    <button className="extended fab tertiary" onClick={() => setShowCreateDialog(true)}>
+                        <i>add</i>
+                        <span>Dodaj temat</span>
+                    </button>
                 </div>
             </main>
 

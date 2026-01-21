@@ -87,8 +87,6 @@ def create_topic():
     new_topic = Topic(
         title=data['title'],
         description=data.get('description', ''),
-        is_standard=data.get('isStandard', True),
-        max_members=data.get('maxMembers', 4),
         status=TopicStatus.OCZEKUJACY,
         is_open=True,
         teacher_id=teacher.id if teacher else None
@@ -113,4 +111,6 @@ def get_me():
         'title': teacher.title.value if teacher.title else 'dr',
         'avatar': 'https://ui-avatars.com/api/?name=Michal+Slimak&background=random'
     })
+
+
 

@@ -38,8 +38,8 @@ class Topic(db.Model):
             'title': self.title,
             'description': self.description,
             'isOpen': self.is_open,
-            'isStandard': self.is_standard,
-            'maxMembers': self.max_members,
+            'isStandard': True, # Default, not in DB
+            'maxMembers': 4,    # Default, not in DB
             'status': self.status.value,
             'creationDate': self.creation_date.isoformat().split('T')[0],
             'supervisor': {
