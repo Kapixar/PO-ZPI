@@ -1,8 +1,9 @@
 import { SideBar, type SideBarItem } from "~/components/SideBar";
-import type { Route } from "../+types/dashboard";
+
 import { useEffect, useState } from "react";
 import { topicService, type PendingTopic } from "~/services/topic.service";
 import { TopicCard } from "~/components/TopicCard";
+import type { Route } from "./+types/member-of-program-committee";
 
 
 export function meta({ }: Route.MetaArgs) {

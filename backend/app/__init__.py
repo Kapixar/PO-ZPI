@@ -18,9 +18,10 @@ def create_app(config_name='default'):
     with app.app_context():
         from app.models import Account, Student, Teacher, Topic, Declaration
     
-    from app.routes import health_bp, topics
+    from app.routes import health_bp, topics, export_bp
     app.register_blueprint(health_bp)
     app.register_blueprint(topics.topics_bp)
+    app.register_blueprint(export_bp)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
