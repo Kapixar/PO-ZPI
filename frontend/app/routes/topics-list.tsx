@@ -6,16 +6,6 @@ import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
 import ExportService from '~/services/export.service';
 
-// W komponencie:
-const handleExportClick = async () => {
-    try {
-        await ExportService.exportStudentsByTopic();
-        // Sukces - plik został pobrany
-    } catch (error) {
-        console.error("Błąd eksportu:", error);
-        // Obsłuż błąd (np. pokaż toast)
-    }
-};
 
 export function meta({ }: Route.MetaArgs) {
     return [

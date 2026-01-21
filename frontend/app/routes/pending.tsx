@@ -3,8 +3,7 @@ import { SideBar, type SideBarItem } from "~/components/SideBar";
 import { useEffect, useState } from "react";
 import { topicService, type PendingTopic } from "~/services/topic.service";
 import { TopicCard } from "~/components/TopicCard";
-import type { Route } from "./+types/member-of-program-committee";
-
+import type { Route } from "../+types/root";
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -17,13 +16,6 @@ export default function Dashboard() {
     const [topics, setTopics] = useState<PendingTopic[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const sideBarData: SideBarItem[] = [
-        { icon: "home", name: "Pulpit" },
-        { icon: "search", name: "Tematy" },
-        { icon: "more_vert", name: "Mój profil" },
-        { icon: "more_vert", name: "Oczekujące" },
-        { icon: "more_vert", name: "Przyjęte" },
-    ]
 
     useEffect(() => {
         const getPending = async () => {
@@ -53,7 +45,7 @@ export default function Dashboard() {
 
     return (
         <div className="">
-            <SideBar items={sideBarData} />
+            <SideBar />
             <main className=" rounded-2xl">
                 <nav>
                     <button className="circle transparent">
