@@ -4,8 +4,20 @@ import type { Route } from "../+types/root";
 import { UserRole, useUser } from "~/contexts/UserContext";
 import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
+import ExportService from '~/services/export.service';
 
-export function meta({}: Route.MetaArgs) {
+// W komponencie:
+const handleExportClick = async () => {
+    try {
+        await ExportService.exportStudentsByTopic();
+        // Sukces - plik został pobrany
+    } catch (error) {
+        console.error("Błąd eksportu:", error);
+        // Obsłuż błąd (np. pokaż toast)
+    }
+};
+
+export function meta({ }: Route.MetaArgs) {
     return [
         { title: "New React Router App" },
         { name: "description", content: "Welcome to React Router!" },
@@ -72,6 +84,16 @@ export default function Dashboard() {
             return 0;
         });
 
+
+    const onDownloadClick = async () => {
+        try {
+            await ExportService.exportStudentsByTopic();
+
+        } catch (error) {
+            setError("download error")
+        }
+    }
+
     return (
         <div className="">
             <SideBar />
@@ -82,7 +104,7 @@ export default function Dashboard() {
                     </button>
                     <div className="max"></div>
                     {hasRole(UserRole.Coordinator) && (
-                        <button className="circle transparent">
+                        <button className="circle transparent" onClick={onDownloadClick}>
                             <i>download</i>
                         </button>
                     )}
@@ -159,8 +181,8 @@ export default function Dashboard() {
                         {sortBy === null
                             ? "Sortuj"
                             : sortBy === "date"
-                              ? "Data"
-                              : "Tytuł"}
+                                ? "Data"
+                                : "Tytuł"}
                     </button>
                     <button
                         className={`chip ${showOpenOnly ? "fill" : ""}`}
