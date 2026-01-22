@@ -15,11 +15,11 @@ export function ProjectListItem({
 }: ProjectItemProps) {
     return (
         <li>
-            <Link to={`/topic/${id}`} className="row">
+            <Link to={`/topic/${id}`} className="row wave">
                 <button className="circle">{slots}</button>
                 <div className="max">
-                    <div className="small">{supervisor}</div>
-                    <div className="large">{title}</div>
+                    <div className="small-text">{supervisor}</div>
+                    <div className="text-medium">{title}</div>
                 </div>
                 <i>arrow_forward</i>
             </Link>

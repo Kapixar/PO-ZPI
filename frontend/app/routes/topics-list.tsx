@@ -100,7 +100,10 @@ export default function Dashboard() {
                     </button>
                     <div className="max"></div>
                     {hasRole(UserRole.Coordinator) && (
-                        <button className="circle transparent" onClick={onDownloadClick}>
+                        <button
+                            className="circle transparent"
+                            onClick={onDownloadClick}
+                        >
                             <i>download</i>
                         </button>
                     )}
@@ -108,7 +111,11 @@ export default function Dashboard() {
                         <i>more_vert</i>
                     </button>
                 </nav>
-                <h3>{hasRole(UserRole.Coordinator) ? "Lista zespołów ZPI" : "Lista tematów ZPI"}</h3>
+                <h3>
+                    {hasRole(UserRole.Coordinator)
+                        ? "Lista zespołów ZPI"
+                        : "Lista tematów ZPI"}
+                </h3>
 
                 {/* Sort Menu */}
                 <menu className="no-wrap">
@@ -177,8 +184,8 @@ export default function Dashboard() {
                         {sortBy === null
                             ? "Sortuj"
                             : sortBy === "date"
-                                ? "Data"
-                                : "Tytuł"}
+                              ? "Data"
+                              : "Tytuł"}
                     </button>
                     <button
                         className={`chip ${showOpenOnly ? "fill" : ""}`}
@@ -254,8 +261,12 @@ export default function Dashboard() {
                             <ProjectListItem
                                 key={topic.id}
                                 id={topic.id}
-                                slots={topic.maxMembers != null ? topic.maxMembers : 0}
-                                supervisor={`${topic.supervisor.title} ${topic.supervisor.firstName} ${topic.supervisor.lastName}`}
+                                slots={
+                                    topic.team.length != null
+                                        ? topic.team.length
+                                        : 0
+                                }
+                                supervisor={`${topic.supervisor.title} ${topic.supervisor.fullName}`}
                                 title={topic.title}
                             />
                         ))}
@@ -274,10 +285,20 @@ export default function Dashboard() {
                         <br />
                         <div>Czy chcesz wyeksportować listę zespołów ZPI</div>
                         <nav className="right-align no-space">
-                            <button className="transparent link" onClick={() => setShowDownloadDialog(false)}>Anuluj</button>
-                            <button className="transparent link" onClick={() => {
-                                exportTeams();
-                            }}>Potwierdź</button>
+                            <button
+                                className="transparent link"
+                                onClick={() => setShowDownloadDialog(false)}
+                            >
+                                Anuluj
+                            </button>
+                            <button
+                                className="transparent link"
+                                onClick={() => {
+                                    exportTeams();
+                                }}
+                            >
+                                Potwierdź
+                            </button>
                         </nav>
                     </dialog>
                 </>
@@ -291,9 +312,17 @@ export default function Dashboard() {
                     <dialog className="active">
                         <h5>Podjęto próbę eksportu listy zespołów ZPI</h5>
                         <br />
-                        <div>Podjęto próbę eksportu listy zespołów ZPI w formacie .xlsx na twoje urządzenie</div>
+                        <div>
+                            Podjęto próbę eksportu listy zespołów ZPI w formacie
+                            .xlsx na twoje urządzenie
+                        </div>
                         <nav className="right-align no-space">
-                            <button className="transparent link" onClick={() => setShowSuccessDialog(false)}>OK</button>
+                            <button
+                                className="transparent link"
+                                onClick={() => setShowSuccessDialog(false)}
+                            >
+                                OK
+                            </button>
                         </nav>
                     </dialog>
                 </>

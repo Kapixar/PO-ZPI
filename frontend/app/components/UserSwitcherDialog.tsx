@@ -15,7 +15,7 @@ export function UserSwitcherDialog({ dialogId }: UserSwitcherDialogProps) {
         <dialog id={dialogId}>
             <h5>Zmień użytkownika</h5>
             <p>Wybierz użytkownika, aby przetestować różne uprawnienia</p>
-            <nav className="group">
+            <nav className="group wrap">
                 {mockUsers.map((mockUser) => (
                     <button
                         key={mockUser.role + (mockUser.user_id ?? "")}

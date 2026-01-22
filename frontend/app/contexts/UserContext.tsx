@@ -29,8 +29,8 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const mockUsers: User[] = [
-    { role: UserRole.Student, user_id: 10, name: "student 10" },
-    { role: UserRole.Student, user_id: 11, name: "student 11" },
+    { role: UserRole.Student, user_id: 48, name: "student 48" },
+    { role: UserRole.Student, user_id: 43, name: "student 43" },
     { role: UserRole.KPK, user_id: 3 },
     { role: UserRole.Teacher, user_id: 5, name: "anna nowak" },
     { role: UserRole.Teacher, user_id: 6, name: "piotr kowalski" },

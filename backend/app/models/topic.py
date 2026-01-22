@@ -33,6 +33,8 @@ class Topic(db.Model):
         return f'<Topic {self.title}>'
     
     def to_dict(self):
+        # find name in account model
+
         return {
             'id': self.id,
             'title': self.title,
@@ -46,16 +48,17 @@ class Topic(db.Model):
             'rejectionReason': self.rejection_reason,
             'supervisor': {
                 'id': self.teacher.id,
-                'firstName': 'Michał', 
-                'lastName': 'Ślimak',
+                'accountId': self.teacher.account.id if self.teacher and self.teacher.account else None,
+                'fullName': self.teacher.account.full_name if self.teacher and self.teacher.account else '',
                 'title': self.teacher.title.value if self.teacher and self.teacher.title else '',
                 'avatar': 'https://ui-avatars.com/api/?name=Michal+Slimak&background=random'
             } if self.teacher else None,
             'team': [{
-                'id': s.id, 
-                'firstName': 'Jan', 
-                'lastName': "Kowalski",
+                'id': s.id,
+                'accountId': s.account.id if s.account else None,
+                'fullName': s.account.full_name if s.account else 'Jan Kowalski',
                 'studentIndex': s.index_number,
+                'isDeclarationApproved': s.is_declaration_approved,
                 'declaration': {
                     'id': s.declaration.id,
                     'status': s.declaration.status.value,
