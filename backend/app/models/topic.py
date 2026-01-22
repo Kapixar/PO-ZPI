@@ -38,10 +38,10 @@ class Topic(db.Model):
             'title': self.title,
             'description': self.description,
             'isOpen': self.is_open,
-            'isStandard': self.is_standard,
-            'maxMembers': self.max_members,
             'status': self.status.value,
             'creationDate': self.creation_date.isoformat().split('T')[0],
+            'topicJustification': self.topic_justification,
+            'rejectionReason': self.rejection_reason,
             'supervisor': {
                 'id': self.teacher.id,
                 'firstName': 'Michał', 
