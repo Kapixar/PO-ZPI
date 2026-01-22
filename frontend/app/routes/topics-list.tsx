@@ -4,7 +4,8 @@ import type { Route } from "../+types/root";
 import { UserRole, useUser } from "~/contexts/UserContext";
 import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
-import ExportService from '~/services/export.service';
+import { exportService } from "~/services/export.service";
+
 
 
 export function meta({ }: Route.MetaArgs) {
@@ -79,7 +80,7 @@ export default function Dashboard() {
 
     const exportTeams = async () => {
         try {
-            await ExportService.exportStudentsByTopic();
+            await exportService.exportStudentsByTopic();
             setShowDownloadDialog(false);
             setShowSuccessDialog(true);
         } catch (error) {

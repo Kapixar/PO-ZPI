@@ -39,4 +39,4 @@ class ExportService {
     }
 }
 
-export default new ExportService();
+export const exportService = new ExportService();
