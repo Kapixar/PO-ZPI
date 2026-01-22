@@ -35,7 +35,7 @@ export default function Dashboard() {
                 setLoading(true);
                 setError(null);
                 const fetchedTopics = await topicService.getAllTopics();
-                
+
                 setTopics(fetchedTopics);
             } catch (err) {
                 setError(
@@ -108,7 +108,7 @@ export default function Dashboard() {
                         <i>more_vert</i>
                     </button>
                 </nav>
-                <h3>Lista tematów ZPI</h3>
+                <h3>{hasRole(UserRole.Coordinator) ? "Lista zespołów ZPI" : "Lista tematów ZPI"}</h3>
 
                 {/* Sort Menu */}
                 <menu className="no-wrap">
