@@ -13,7 +13,6 @@ def create_app(config_name='default'):
     
     db.init_app(app)
     migrate.init_app(app, db)
-    CORS(app)
 
     with app.app_context():
         from app.models import Account, Student, Teacher, Topic, Declaration
@@ -23,6 +22,6 @@ def create_app(config_name='default'):
     app.register_blueprint(topics.topics_bp)
     app.register_blueprint(export_bp)
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}}, supports_credentials=True)
 
     return app
