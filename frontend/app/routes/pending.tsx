@@ -1,5 +1,4 @@
 import { SideBar, type SideBarItem } from "~/components/SideBar";
-
 import { useEffect, useState } from "react";
 import { topicService, type PendingTopic } from "~/services/topic.service";
 import { PendingTopicCard } from "~/components/PendingTopicCard";
@@ -96,7 +95,7 @@ export default function Dashboard() {
         try {
             // --- REAL SERVICE CALL ---
             // Assuming rejectTopic takes (id, reason)
-            await topicService.rejectTopic(selectedTopic.id, rejectionReason); 
+            await topicService.rejectTopic(selectedTopic.id, rejectionReason);
 
             setIsRejecting(false);
             setShowRejectSuccess(true);
@@ -124,7 +123,7 @@ export default function Dashboard() {
             // Passing single ID as an array to reuse the bulk endpoint, 
             // or use approveTopic(id) if your service has a specific single method.
             await topicService.approveTopics([selectedTopic.id]);
-            
+
             setIsApproving(false);
             setShowApproveSuccess(true);
         } catch (e) {
@@ -146,7 +145,7 @@ export default function Dashboard() {
         });
     }
 
-// 1. Trigger Bulk Dialog
+    // 1. Trigger Bulk Dialog
     const handleApproveSelected = () => {
         if (selectedStandardIds.size === 0) return;
         setIsBulkApproving(true);
@@ -162,7 +161,7 @@ export default function Dashboard() {
         try {
             const idsArray = Array.from(selectedStandardIds);
             await topicService.approveTopics(idsArray);
-            
+
             setIsBulkApproving(false);
             setShowBulkApproveSuccess(true);
         } catch (err) {
@@ -444,7 +443,7 @@ export default function Dashboard() {
             )}
 
             {/* --- BULK ACTIONS DIALOGS --- */}
-            
+
             {/* 1. Bulk Confirmation */}
             {isBulkApproving && (
                 <>
@@ -455,11 +454,11 @@ export default function Dashboard() {
                             <div className="space"></div>
                             <h5>Czy chcesz potwierdzić zaznaczone {selectedStandardIds.size} tematy?</h5>
                             <div className="space"></div>
-                            
+
                             {/* List selected titles neatly */}
                             <div className="small-text left-align grey-text">
                                 {selectedTopicsList.map(t => t.title).join(", ")}
-                                {selectedTopicsList.length > 5 && "..."} 
+                                {selectedTopicsList.length > 5 && "..."}
                             </div>
                         </div>
                         <nav className="center-align padding no-space">
@@ -485,7 +484,7 @@ export default function Dashboard() {
                             <div className="space"></div>
                             <h5>Zatwierdzono {selectedTopicsList.length} tematy</h5>
                             <div className="space"></div>
-                            
+
                             <div className="small-text left-align grey-text">
                                 {selectedTopicsList.map(t => t.title).join(", ")}
                             </div>

@@ -11,7 +11,7 @@ export interface Supervisor {
     lastName: string;
     title: string;
     avatar?: string;
-    position: string; 
+    position: string;
 }
 
 export type TopicStatus = "ZATWIERDZONY" | "ODRZUCONY" | "OCZEKUJACY";
