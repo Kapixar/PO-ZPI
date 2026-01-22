@@ -11,224 +11,282 @@ from datetime import datetime, timedelta
 app = create_app('development')
 
 def reset_db():
-    print("Cleaning database...")
-    # Order matters due to foreign keys
-    db.session.query(Declaration).delete()
-    db.session.query(Topic).delete()
-    db.session.query(Student).delete()
-    db.session.query(Teacher).delete()
-    db.session.query(Account).delete()
-    db.session.commit()
-    print("Database cleaned.")
+    """Drops all tables and recreates them to ensure a fresh schema."""
+    print("Resetting database...")
+    try:
+        db.drop_all()   # Deletes all tables
+        db.create_all() # Creates all tables from models
+        print("Database schema created.")
+    except Exception as e:
+        print(f"Error resetting database: {e}")
+
+def get_max_teams_for_position(position):
+    """Zwraca maksymalną liczbę zespołów dla danego stanowiska."""
+    if position == Position.ASYTSTENT:
+        return 1
+    # ADIUNKT, PROFESOR_UCZELNI itp.
+    return 2
 
 def seed_data():
     print("Seeding data...")
     
-    # 1. Accounts & Profiles
-    
-    # Administrator
-    admin = Account(
-        full_name="Administrator Systemu",
-        login="admin",
-        password=generate_password_hash("password"),
-        user_type=UserType.ADMIN
-    )
-    db.session.add(admin)
-    
-    # Coordinator
-    coord = Account(
-        full_name="Jan Koordynator",
-        login="koordynator",
-        password=generate_password_hash("password"),
-        user_type=UserType.COORDINATOR
-    )
-    db.session.add(coord)
-    db.session.flush() # to get ID
+    password_hash = generate_password_hash("password")
 
-
-    # KPK Member
-    kpk = Account(
-        full_name="Krzysztof KPK",
-        login="kpk",
-        password=generate_password_hash("password"),
-        user_type=UserType.KPK_MEMBER
-    )
-    db.session.add(kpk)
+    # ==========================================
+    # 1. ACCOUNTS & PROFILES
+    # ==========================================
+    
+    # --- System Roles ---
+    admin = Account(full_name="Administrator Systemu", login="admin", password=password_hash, user_type=UserType.ADMINISTRATOR)
+    coord = Account(full_name="Jan Koordynator", login="koordynator", password=password_hash, user_type=UserType.KOORDYNATOR_PRZEDMIOTU)
+    kpk = Account(full_name="Krzysztof KPK", login="kpk", password=password_hash, user_type=UserType.CZLONEK_KPK)
+    opiekun = Account(full_name="Anna Opiekun", login="opiekun", password=password_hash, user_type=UserType.OPIEKUN_KIERUNKU)
+    
+    db.session.add_all([admin, coord, kpk, opiekun])
     db.session.flush()
-    
 
-    # Supervisors
-    supervisors = []
-    supervisor_data = [
-        ("Michał Ślimak", "supervisor", Title.dr_hab, Position.PROFESOR_UCZELNI),
-        ("Anna Nowak", "anna.nowak", Title.dr, Position.ADIUNKT),
-        ("Piotr Kowalski", "piotr.kowalski", Title.mgr_inz, Position.ASYTSTENT),
-        ("Maria Wiśniewska", "maria.wisniewska", Title.prof, Position.PROFESOR_UCZELNI),
-        ("Tomasz Zieliński", "tomasz.zielinski", Title.dr_inz, Position.ADIUNKT)
+    # --- Teachers ---
+    # Specific Supervisors
+    acc_bh = Account(full_name="Michalina Cierpliwa", login="m.cierpliwa", password=password_hash, user_type=UserType.PROWADZACY)
+    db.session.add(acc_bh)
+    db.session.flush()
+    teacher_bh = Teacher(account_id=acc_bh.id, title=Title.dr_inz, position=Position.PROFESOR_UCZELNI)
+    db.session.add(teacher_bh)
+
+    acc_ms = Account(full_name="Michał Ślimak", login="m.slimak", password=password_hash, user_type=UserType.PROWADZACY)
+    db.session.add(acc_ms)
+    db.session.flush()
+    teacher_ms = Teacher(account_id=acc_ms.id, title=Title.dr_hab_inz, position=Position.ADIUNKT)
+    db.session.add(teacher_ms)
+
+    # Generic Teachers (Added more to accommodate team limits)
+    teachers = [teacher_bh, teacher_ms]
+    generic_teachers_data = [
+        ("Jan Bąk", "j.bak", Title.dr_inz, Position.ADIUNKT),         # Limit: 2
+        ("Maria Zielińska", "m.zielinska", Title.mgr, Position.ASYTSTENT), # Limit: 1
+        ("Tomasz Kot", "t.kot", Title.dr, Position.ADIUNKT),          # Limit: 2
+        ("Beata Wąs", "b.was", Title.mgr_inz, Position.ASYTSTENT),    # Limit: 1
+        ("Marek Nocny", "m.nocny", Title.prof, Position.PROFESOR_UCZELNI) # Limit: 2
     ]
-    
-    for name, login, title, position in supervisor_data:
-        acc = Account(
-            full_name=name,
-            login=login,
-            password=generate_password_hash("password"),
-            user_type=UserType.TEACHER
-        )
+
+    for name, login, title, pos in generic_teachers_data:
+        acc = Account(full_name=name, login=login, password=password_hash, user_type=UserType.PROWADZACY)
         db.session.add(acc)
         db.session.flush()
-        
-        teacher = Teacher(
-            account_id=acc.id,
-            title=title,
-            position=position
-        )
-        db.session.add(teacher)
-        supervisors.append(teacher)
+        t = Teacher(account_id=acc.id, title=title, position=pos)
+        db.session.add(t)
+        teachers.append(t)
 
-    # Students
+    # --- Students ---
     students = []
-    for i in range(1, 16):
-        acc = Account(
-            full_name=f"Student {i}",
-            login=f"student{i}",
-            password=generate_password_hash("password"),
-            user_type=UserType.STUDENT
-        )
+    
+    # PDF Team
+    pdf_team_names = ["Franciszek Dobrzyński", "Stanisław Kaczmarek", "Kacper Knapik"]
+    pdf_students = []
+    for i, name in enumerate(pdf_team_names):
+        login = name.lower().replace(" ", ".")
+        acc = Account(full_name=name, login=login, password=password_hash, user_type=UserType.STUDENT)
         db.session.add(acc)
         db.session.flush()
-        
-        student = Student(
-            account_id=acc.id,
-            index_number=f"2{i:05d}"
-        )
-        db.session.add(student)
-        students.append(student)
+        s = Student(account_id=acc.id, index_number=f"27{i:04d}")
+        db.session.add(s)
+        pdf_students.append(s)
+        students.append(s)
 
+    # Generic Students
+    for i in range(1, 60): # Increased students pool
+        acc = Account(full_name=f"Student {i}", login=f"student{i}", password=password_hash, user_type=UserType.STUDENT)
+        db.session.add(acc)
+        db.session.flush()
+        s = Student(account_id=acc.id, index_number=f"28{i:04d}")
+        db.session.add(s)
+        students.append(s)
+
+    # COMMIT TO GENERATE IDs
     db.session.commit()
-    print("Users created.")
+    print(f"Accounts created. Total teachers: {len(teachers)}")
 
-    # 2. Topics
-    topics = []
+    # Initialize loads AFTER commit ensures IDs are generated
+    teacher_loads = {t.id: 0 for t in teachers}
+
+    # ==========================================
+    # 2. TOPICS & TEAMS (SCENARIOS)
+    # ==========================================
+
+    # --- SCENARIO A: Standard Pending Topic ---
+    # Jan Bąk (ADIUNKT, Limit 2) -> Usage: 1/2
+    topic_std = Topic(
+        title="Rozproszony system zarządzania personelem średnich przedsiębiorstw",
+        description="Celem projektu jest stworzenie systemu ERP dedykowanego dla MŚP.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[2].id, # Jan Bąk
+        creation_date=datetime.now() - timedelta(days=2),
+        topic_justification=None
+    )
+    db.session.add(topic_std)
+    # Zawsze zwiększamy licznik (chyba że przekroczylibyśmy limit, ale tu sterujemy ręcznie)
+    teacher_loads[teachers[2].id] += 1
     
-    # Pre-defined topics
-    topic_definitions = [
-        ("Watchout - system rejestracji zdarzeń", "System do zgłaszania zagrożeń.", TopicStatus.OCZEKUJACY),
-        ("System HR dla firm rozproszonych", "Aplikacja webowa do zarządzania HR.", TopicStatus.ZATWIERDZONY),
-        ("Analiza sentymentu w social media", "Wykorzystanie NLP do analizy opinii.", TopicStatus.ZATWIERDZONY),
-        ("Platforma e-learningowa dla seniorów", "Dostępna aplikacja do nauki.", TopicStatus.ODRZUCONY),
-        ("System obsługi magazynu 3D", "Wizualizacja stanów magazynowych.", TopicStatus.OCZEKUJACY),
-        ("Aplikacja mobilna dla biegaczy", "Tracking tras i statystyk.", TopicStatus.ZATWIERDZONY),
-        ("Optymalizacja tras kurierskich", "Algorytmy genetyczne w logistyce.", TopicStatus.ZATWIERDZONY),
-        ("System rezerwacji sal", "Zarządzanie zasobami uczelni.", TopicStatus.OCZEKUJACY),
-        ("Chatbot dla dziekanatu", "Automatyzacja odpowiedzi na pytania.", TopicStatus.ODRZUCONY),
-        ("Inteligentny dom - dashboard", "Panel sterowania IoT.", TopicStatus.ZATWIERDZONY),
-        ("Gra edukacyjna dla dzieci", "Nauka matematyki przez zabawę.", TopicStatus.ZATWIERDZONY),
-        ("System CRM dla małych firm", "Zarządzanie relacjami z klientami.", TopicStatus.OCZEKUJACY)
+    db.session.flush()
+    for _ in range(4): students.pop().topic_id = topic_std.id
+
+    # --- SCENARIO B: Non-Standard Pending Topic ---
+    # Michał Ślimak (ADIUNKT, Limit 2) -> Usage: 1/2
+    topic_ns_small = Topic(
+        title="Watchout - system rejestracji zdarzeń zagrażających bezpieczeństwu",
+        description="Aplikacja mobilna i serwerowa do crowd-sourcingu.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teacher_ms.id, 
+        creation_date=datetime.now() - timedelta(days=5),
+        topic_justification="Projekt wymaga wysokiej specjalizacji."
+    )
+    db.session.add(topic_ns_small)
+    teacher_loads[teacher_ms.id] += 1
+
+    db.session.flush()
+    for _ in range(3): students.pop().topic_id = topic_ns_small.id
+
+    # --- SCENARIO C: Non-Standard Pending Topic ---
+    # Michał Ślimak (ADIUNKT, Limit 2) -> Usage: 2/2 (MAX REACHED)
+    topic_ns_large = Topic(
+        title="AI Present Finder - agent rekomendujący prezenty",
+        description="System wykorzystujący LLM i RAG.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teacher_ms.id,
+        creation_date=datetime.now() - timedelta(days=1),
+        topic_justification="Złożoność modułów AI."
+    )
+    db.session.add(topic_ns_large)
+    teacher_loads[teacher_ms.id] += 1
+
+    db.session.flush()
+    for _ in range(5): students.pop().topic_id = topic_ns_large.id
+
+    # --- SCENARIO D: Approved Topic ---
+    # Bogumiła Hnatkowska (PROF, Limit 2) -> Usage: 1/2
+    topic_approved = Topic(
+        title="System zarządzania tematami ZPI",
+        description="System webowy wspierający proces zgłaszania tematów.",
+        status=TopicStatus.ZATWIERDZONY,
+        is_open=False,
+        teacher_id=teacher_bh.id,
+        creation_date=datetime.now() - timedelta(days=20)
+    )
+    db.session.add(topic_approved)
+    teacher_loads[teacher_bh.id] += 1
+
+    db.session.flush()
+    pdf_students[0].topic_id = topic_approved.id
+    pdf_students[1].topic_id = topic_approved.id
+    pdf_students[2].topic_id = topic_approved.id
+    if students: students.pop().topic_id = topic_approved.id
+
+    decl = Declaration(status=Status.ZLOZONA, submission_date=datetime.now() - timedelta(days=10))
+    db.session.add(decl)
+    db.session.flush()
+    topic_approved.declaration_id = decl.id
+
+    # --- SCENARIO E: Rejected Topic ---
+    # Maria Zielińska (ASYSTENT, Limit 1) -> Usage: 1/1 (MAX REACHED - Odrzucony też się wlicza)
+    topic_rejected = Topic(
+        title="Prosty sklep internetowy w PHP",
+        description="Sklep z koszykiem.",
+        status=TopicStatus.ODRZUCONY,
+        is_open=True,
+        teacher_id=teachers[3].id, # Maria Zielińska
+        creation_date=datetime.now() - timedelta(days=15),
+        rejection_reason="Temat zbyt trywialny."
+    )
+    db.session.add(topic_rejected)
+    teacher_loads[teachers[3].id] += 1 # Wliczamy odrzucony
+    
+    db.session.flush()
+    for _ in range(4): 
+        if students: students.pop().topic_id = topic_rejected.id
+
+    # --- SCENARIO F: Open Topic ---
+    # Jan Bąk (ADIUNKT, Limit 2) -> Usage: 2/2 (MAX REACHED)
+    topic_open = Topic(
+        title="System wspomagania treningu wspinaczkowego",
+        description="Analiza wideo i czujników IoT.",
+        status=TopicStatus.ZATWIERDZONY,
+        is_open=True,
+        teacher_id=teachers[2].id, # Jan Bąk
+        creation_date=datetime.now() - timedelta(days=8)
+    )
+    db.session.add(topic_open)
+    teacher_loads[teachers[2].id] += 1
+
+    db.session.flush()
+    for _ in range(3):
+        if students: students.pop().topic_id = topic_open.id
+
+    # ==========================================
+    # 3. RANDOM FILLER DATA (Respecting Limits)
+    # ==========================================
+    
+    filler_titles = [
+        ("Platforma e-learningowa dla seniorów", TopicStatus.ODRZUCONY), # Teraz to też zużywa slot!
+        ("Optymalizacja tras kurierskich", TopicStatus.ZATWIERDZONY),
+        ("Inteligentny dom - dashboard", TopicStatus.ZATWIERDZONY),
+        ("Gra edukacyjna dla dzieci", TopicStatus.ZATWIERDZONY),
+        ("System CRM dla małych firm", TopicStatus.OCZEKUJACY)
     ]
 
-    for title, desc, status in topic_definitions:
-        supervisor = random.choice(supervisors)
-        topic = Topic(
+    for title, status in filler_titles:
+        # Filter available supervisors based on current load and position limit
+        available_teachers = []
+        for t in teachers:
+            limit = get_max_teams_for_position(t.position)
+            current = teacher_loads[t.id]
+            
+            # Wszyscy muszą mieć wolny slot, nawet na temat odrzucony
+            if current < limit:
+                available_teachers.append(t)
+        
+        if not available_teachers:
+            print(f"Skipping topic '{title}': No available teachers with free slots.")
+            continue
+
+        supervisor = random.choice(available_teachers)
+        
+        t = Topic(
             title=title,
-            description=desc,
+            description="Automatycznie wygenerowany opis...",
             status=status,
             is_open=False,
             teacher_id=supervisor.id,
             creation_date=datetime.now() - timedelta(days=random.randint(1, 30))
         )
         if status == TopicStatus.ODRZUCONY:
-            topic.rejection_reason = "Temat nie spełnia wymagań formalnych."
-        
-        # Randomly assign justification for some
-        if random.random() > 0.5:
-            topic.topic_justification = "Bardzo ważny temat badawczy."
+            t.rejection_reason = "Losowy powód odrzucenia."
 
-        db.session.add(topic)
-        topics.append(topic)
-    
-    db.session.commit()
-    print("Topics created.")
-    
-    # 3. Declarations and Student-Topic Associations
-    
-    # Assign some approved topics to student groups
-    approved_topics = [t for t in topics if t.status == TopicStatus.ZATWIERDZONY]
-    available_students = list(students)
-    
-    # Create 2 groups with approved declarations
-    for i in range(2):
-        if not approved_topics or len(available_students) < 2:
-            break
-            
-        topic = approved_topics.pop()
-        
-        # Create declaration
-        declaration = Declaration(
-            status=Status.ZLOZONA,
-            submission_date=datetime.now()
-        )
-        db.session.add(declaration)
+        db.session.add(t)
         db.session.flush()
         
-        # Link declaration to topic
-        topic.teacher_declaration_id = declaration.id
-        topic.is_open = False
+        # Zawsze zwiększamy licznik
+        teacher_loads[supervisor.id] += 1
         
-        # Assign 2-3 students with approved declaration
-        group_size = random.randint(2, 3)
-        for _ in range(group_size):
-            if available_students:
-                student = available_students.pop()
-                student.topic_id = topic.id
-                student.declaration_id = declaration.id
-                student.is_declaration_approved = True
-    
-    # Create 1 group with pending declaration (W_PRZYGOTOWANIU)
-    if approved_topics and len(available_students) >= 2:
-        pending_topic = approved_topics.pop()
-        declaration = Declaration(
-            status=Status.W_PRZYGOTOWANIU,
-            submission_date=datetime.now()
-        )
-        db.session.add(declaration)
-        db.session.flush()
-        pending_topic.teacher_declaration_id = declaration.id
-        pending_topic.is_open = False
+        team_size = random.choice([3, 4, 5])
+        for _ in range(team_size):
+            if students:
+                s = students.pop()
+                s.topic_id = t.id
         
-        # Assign 2-3 students with pending declaration
-        group_size = random.randint(2, 3)
-        for _ in range(group_size):
-            if available_students:
-                student = available_students.pop()
-                student.topic_id = pending_topic.id
-                student.declaration_id = declaration.id
-                student.is_declaration_approved = False
-    
-    # Assign some students directly to topics WITHOUT declarations
-    # (topics assigned but no formal declaration yet)
-    for _ in range(2):
-        if approved_topics and available_students:
-            topic = approved_topics.pop()
-            topic.is_open = True  # Still open for more students
-            
-            # Assign 1-2 students without declaration
-            group_size = random.randint(1, 2)
-            for _ in range(group_size):
-                if available_students:
-                    student = available_students.pop()
-                    student.topic_id = topic.id
-                    # No declaration_id set
-                    student.is_declaration_approved = False
-    
-    # Leave remaining students without topics (available_students)
-    # They stay unassigned with topic_id = None
+        if status == TopicStatus.ZATWIERDZONY:
+            d = Declaration(status=Status.ZLOZONA, submission_date=datetime.now())
+            db.session.add(d)
+            db.session.flush()
+            t.declaration_id = d.id
 
     db.session.commit()
-    print(f"Declarations created and students associated with topics.")
-    print(f"Students with approved declarations: {len([s for s in students if s.is_declaration_approved])}")
-    print(f"Students with topics but no declaration: {len([s for s in students if s.topic_id and not s.declaration_id])}")
-    print(f"Students without topics: {len([s for s in students if not s.topic_id])}")
     print("Seeding complete.")
+    print("Teacher Loads:")
+    for t in teachers:
+        print(f" - {t.account.full_name} ({t.position.name}): {teacher_loads[t.id]}/{get_max_teams_for_position(t.position)}")
 
 if __name__ == '__main__':
     with app.app_context():
