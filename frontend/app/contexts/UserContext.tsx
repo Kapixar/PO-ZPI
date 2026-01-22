@@ -2,6 +2,7 @@ import React, {
     createContext,
     useContext,
     useState,
+    useEffect,
     type ReactNode,
 } from "react";
 
@@ -34,7 +35,28 @@ export const mockUsers: User[] = [
 ];
 
 export function UserProvider({ children }: { children: ReactNode }) {
-    const [user, setUser] = useState<User>(mockUsers[0]); // Default to Student
+    const [user, setUser] = useState<User>(() => {
+        if (typeof window !== "undefined") {
+            const savedUser = localStorage.getItem("user");
+            if (savedUser) {
+                try {
+                    const parsed = JSON.parse(savedUser);
+                    if (parsed && parsed.role) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse user from localStorage", e);
+                }
+            }
+        }
+        return mockUsers[0]; // Default to Student
+    });
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(user));
+        }
+    }, [user]);
 
     const hasRole = (...roles: UserRole[]) => {
         return roles.includes(user.role);
