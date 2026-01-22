@@ -18,7 +18,7 @@ class Topic(db.Model):
     is_open = db.Column(db.Boolean, default=False)
     creation_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     teacher_id = db.Column(db.Integer, db.ForeignKey('teacher.id', ondelete='SET NULL'), nullable=True)
-    declaration_id = db.Column(db.Integer, db.ForeignKey('declaration.id', ondelete='SET NULL'), nullable=True, unique=True)
+    teacher_declaration_id = db.Column(db.Integer, db.ForeignKey('declaration.id', ondelete='SET NULL', name='fk_topic_teacher_declaration'), nullable=True)
     status = db.Column(db.Enum(TopicStatus), default=TopicStatus.OCZEKUJACY, nullable=False)
     topic_justification = db.Column(db.Text, nullable=True)
     rejection_reason = db.Column(db.Text, nullable=True)
@@ -51,5 +51,19 @@ class Topic(db.Model):
                 'title': self.teacher.title.value if self.teacher and self.teacher.title else '',
                 'avatar': 'https://ui-avatars.com/api/?name=Michal+Slimak&background=random'
             } if self.teacher else None,
-            'team': [{'id': s.id, 'firstName': s.first_name, 'lastName': s.last_name} for s in self.students]
+            'team': [{
+                'id': s.id, 
+                'firstName': 'Jan', 
+                'lastName': "Kowalski",
+                'declaration': {
+                    'id': s.declaration.id,
+                    'status': s.declaration.status.value,
+                    'submissionDate': s.declaration.submission_date.isoformat().split('T')[0]
+                } if s.declaration else None
+            } for s in self.students],
+            'declaration': {
+                'id': self.declaration.id,
+                'status': self.declaration.status.value,
+                'submissionDate': self.declaration.submission_date.isoformat().split('T')[0]
+            } if self.declaration else None
         }

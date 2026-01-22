@@ -31,7 +31,7 @@ def seed_data():
         full_name="Administrator Systemu",
         login="admin",
         password=generate_password_hash("password"),
-        user_type=UserType.ADMINISTRATOR
+        user_type=UserType.ADMIN
     )
     db.session.add(admin)
     
@@ -40,7 +40,7 @@ def seed_data():
         full_name="Jan Koordynator",
         login="koordynator",
         password=generate_password_hash("password"),
-        user_type=UserType.KOORDYNATOR_PRZEDMIOTU
+        user_type=UserType.COORDINATOR
     )
     db.session.add(coord)
     db.session.flush() # to get ID
@@ -51,7 +51,7 @@ def seed_data():
         full_name="Krzysztof KPK",
         login="kpk",
         password=generate_password_hash("password"),
-        user_type=UserType.CZLONEK_KPK
+        user_type=UserType.KPK_MEMBER
     )
     db.session.add(kpk)
     db.session.flush()
@@ -72,7 +72,7 @@ def seed_data():
             full_name=name,
             login=login,
             password=generate_password_hash("password"),
-            user_type=UserType.PROWADZACY
+            user_type=UserType.TEACHER
         )
         db.session.add(acc)
         db.session.flush()
@@ -149,15 +149,15 @@ def seed_data():
     db.session.commit()
     print("Topics created.")
     
-    # 3. Declarations
+    # 3. Declarations and Student-Topic Associations
     
     # Assign some approved topics to student groups
     approved_topics = [t for t in topics if t.status == TopicStatus.ZATWIERDZONY]
     available_students = list(students)
     
-    # Create 3 fully formed groups with declarations
-    for i in range(3):
-        if not approved_topics or len(available_students) < 4:
+    # Create 2 groups with approved declarations
+    for i in range(2):
+        if not approved_topics or len(available_students) < 2:
             break
             
         topic = approved_topics.pop()
@@ -170,19 +170,21 @@ def seed_data():
         db.session.add(declaration)
         db.session.flush()
         
-        # Link to topic
-        topic.declaration_id = declaration.id
-        topic.is_open = False # Close topic as it has a declaration
+        # Link declaration to topic
+        topic.teacher_declaration_id = declaration.id
+        topic.is_open = False
         
-        # Assign 2-4 students
-        group_size = random.randint(2, 4)
+        # Assign 2-3 students with approved declaration
+        group_size = random.randint(2, 3)
         for _ in range(group_size):
             if available_students:
                 student = available_students.pop()
                 student.topic_id = topic.id
+                student.declaration_id = declaration.id
                 student.is_declaration_approved = True
     
-    if approved_topics:
+    # Create 1 group with pending declaration (W_PRZYGOTOWANIU)
+    if approved_topics and len(available_students) >= 2:
         pending_topic = approved_topics.pop()
         declaration = Declaration(
             status=Status.W_PRZYGOTOWANIU,
@@ -190,11 +192,42 @@ def seed_data():
         )
         db.session.add(declaration)
         db.session.flush()
-        pending_topic.declaration_id = declaration.id
+        pending_topic.teacher_declaration_id = declaration.id
+        pending_topic.is_open = False
+        
+        # Assign 2-3 students with pending declaration
+        group_size = random.randint(2, 3)
+        for _ in range(group_size):
+            if available_students:
+                student = available_students.pop()
+                student.topic_id = pending_topic.id
+                student.declaration_id = declaration.id
+                student.is_declaration_approved = False
     
+    # Assign some students directly to topics WITHOUT declarations
+    # (topics assigned but no formal declaration yet)
+    for _ in range(2):
+        if approved_topics and available_students:
+            topic = approved_topics.pop()
+            topic.is_open = True  # Still open for more students
+            
+            # Assign 1-2 students without declaration
+            group_size = random.randint(1, 2)
+            for _ in range(group_size):
+                if available_students:
+                    student = available_students.pop()
+                    student.topic_id = topic.id
+                    # No declaration_id set
+                    student.is_declaration_approved = False
+    
+    # Leave remaining students without topics (available_students)
+    # They stay unassigned with topic_id = None
 
     db.session.commit()
-    print("Declarations created.")
+    print(f"Declarations created and students associated with topics.")
+    print(f"Students with approved declarations: {len([s for s in students if s.is_declaration_approved])}")
+    print(f"Students with topics but no declaration: {len([s for s in students if s.topic_id and not s.declaration_id])}")
+    print(f"Students without topics: {len([s for s in students if not s.topic_id])}")
     print("Seeding complete.")
 
 if __name__ == '__main__':
