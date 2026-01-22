@@ -214,3 +214,97 @@ def submit_declaration(topic_id):
             'message': str(e)
         }), 500
 
+
+@topics_bp.route('/<int:topic_id>/approve', methods=['PATCH'])
+def approve_topic(topic_id):
+    """
+    Approve a single topic.
+    Changes status to ZATWIERDZONY.
+    """
+    try:
+        topic = Topic.query.get_or_404(topic_id)
+        
+        topic.status = TopicStatus.ZATWIERDZONY
+        # Optionally clear rejection reason if it was previously rejected
+        topic.rejection_reason = None 
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Topic approved successfully',
+            'topic': topic.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'error': 'Failed to approve topic',
+            'message': str(e)
+        }), 500
+
+
+@topics_bp.route('/approve-bulk', methods=['PATCH'])
+def approve_topics_bulk():
+    """
+    Approve multiple topics at once.
+    Expects JSON: { "topic_ids": [1, 2, 3] }
+    """
+    try:
+        data = request.get_json() or {}
+        topic_ids = data.get('topic_ids', [])
+        
+        if not topic_ids:
+            return jsonify({'message': 'No topics provided'}), 400
+
+        # Update all topics with IDs in the list
+        updated_count = Topic.query.filter(Topic.id.in_(topic_ids)).update(
+            {Topic.status: TopicStatus.ZATWIERDZONY},
+            synchronize_session=False
+        )
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Successfully approved {updated_count} topics',
+            'count': updated_count
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'error': 'Failed to approve topics in bulk',
+            'message': str(e)
+        }), 500
+
+
+@topics_bp.route('/<int:topic_id>/reject', methods=['PATCH'])
+def reject_topic(topic_id):
+    """
+    Reject a single topic.
+    Expects JSON: { "rejection_reason": "Reason here..." }
+    Changes status to ODRZUCONY and saves the reason.
+    """
+    try:
+        topic = Topic.query.get_or_404(topic_id)
+        data = request.get_json() or {}
+        
+        reason = data.get('rejection_reason')
+        if not reason:
+            return jsonify({'error': 'Rejection reason is required'}), 400
+            
+        topic.status = TopicStatus.ODRZUCONY
+        topic.rejection_reason = reason
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Topic rejected successfully',
+            'topic': topic.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'error': 'Failed to reject topic',
+            'message': str(e)
+        }), 500
