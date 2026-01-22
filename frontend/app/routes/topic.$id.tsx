@@ -36,15 +36,10 @@ function TeamMember({ name, role }: TeamMemberProps) {
 
 interface ApproveDialogProps {
     onConfirm: () => void;
-    onCancel: () => void;
     isSubmitting: boolean;
 }
 
-const ApproveDialog = ({
-    onConfirm,
-    onCancel,
-    isSubmitting,
-}: ApproveDialogProps) => {
+const ApproveDialog = ({ onConfirm, isSubmitting }: ApproveDialogProps) => {
     return (
         <dialog
             id="approve-declaration-dialog"
@@ -60,7 +55,7 @@ const ApproveDialog = ({
                 <nav className="right-align no-space">
                     <button
                         className="transparent link"
-                        onClick={onCancel}
+                        data-ui="#approve-declaration-dialog"
                         disabled={isSubmitting}
                     >
                         Cofnij
@@ -68,6 +63,7 @@ const ApproveDialog = ({
                     <button
                         className="transparent link"
                         onClick={onConfirm}
+                        data-ui="#approve-declaration-dialog"
                         disabled={isSubmitting}
                     >
                         {isSubmitting ? (
@@ -83,7 +79,7 @@ const ApproveDialog = ({
 };
 
 export default function TopicDetail({ params }: Route.ComponentProps) {
-    const { hasRole } = useUser();
+    const { hasRole, user } = useUser();
     const navigate = useNavigate();
     const [topic, setTopic] = useState<Topic | null>(null);
     const [loading, setLoading] = useState(true);
@@ -120,25 +116,19 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
     const handleSubmitDeclaration = async () => {
         if (!topic) return;
 
+        if (!user.user_id) {
+            setError("User ID not found. Please log in again.");
+            return;
+        }
+
         try {
             setIsSubmitting(true);
             setError(null);
-            await topicService.submitDeclaration(topic.id);
+            await topicService.submitDeclaration(topic.id, user.user_id);
             setSubmitSuccess(true);
 
-            // Close the dialog
-            const dialog = document.getElementById(
-                "approve-declaration-dialog",
-            ) as HTMLDialogElement;
-            if (dialog) {
-                dialog.close();
-            }
-
-            // Optionally reload the topic to get updated data
             const updatedTopic = await topicService.getTopic(params.id);
-            if (updatedTopic) {
-                setTopic(updatedTopic);
-            }
+            if (updatedTopic) setTopic(updatedTopic);
         } catch (err) {
             setError(
                 err instanceof Error
@@ -151,22 +141,12 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
         }
     };
 
-    const handleCancelDialog = () => {
-        const dialog = document.getElementById(
-            "approve-declaration-dialog",
-        ) as HTMLDialogElement;
-        if (dialog) {
-            dialog.close();
-        }
-    };
-
     return (
         <div className="">
             <SideBar />
             <main className="rounded-2xl large-padding">
                 <ApproveDialog
                     onConfirm={handleSubmitDeclaration}
-                    onCancel={handleCancelDialog}
                     isSubmitting={isSubmitting}
                 />
                 <nav>
@@ -230,7 +210,7 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                             ))}
                         </div>
 
-                        {hasRole(UserRole.Student, UserRole.Supervisor) && (
+                        {hasRole(UserRole.Student, UserRole.Teacher) && (
                             <>
                                 <h5>Zarządzanie</h5>
 
@@ -243,22 +223,21 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                                         <i>check_box</i>
                                         <span>Zatwierdź deklarację</span>
                                     </button>
-                                    {!topic.isStandard &&
-                                        hasRole(UserRole.Supervisor) && (
-                                            <>
-                                                <button className="fill small-round">
-                                                    <i>format_size</i>
-                                                    <span>
-                                                        Uzasadnij niestandardowy
-                                                        rozmiar zespołu
-                                                    </span>
-                                                </button>
-                                                <button className="fill small-round">
-                                                    <i>group</i>
-                                                    <span>Zmień stan</span>
-                                                </button>
-                                            </>
-                                        )}
+                                    {hasRole(UserRole.Teacher) && (
+                                        <>
+                                            <button className="fill small-round">
+                                                <i>format_size</i>
+                                                <span>
+                                                    Uzasadnij niestandardowy
+                                                    rozmiar zespołu
+                                                </span>
+                                            </button>
+                                            <button className="fill small-round">
+                                                <i>group</i>
+                                                <span>Zmień stan</span>
+                                            </button>
+                                        </>
+                                    )}
                                 </nav>
                             </>
                         )}

@@ -161,14 +161,14 @@ class TopicService {
         }
     }
 
-    async submitDeclaration(topicId: string, studentId?: string): Promise<void> {
+    async submitDeclaration(topicId: string, userId: number): Promise<void> {
         try {
             const response = await fetch(`${this.baseUrl}/${topicId}/declare`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ student_id: studentId }),
+                body: JSON.stringify({ user_id: userId }),
             });
 
             if (!response.ok) {
