@@ -1,162 +1,203 @@
 from app import create_app, db
 from app.models.account import Account, UserType
 from app.models.teacher import Teacher, Title, Position
-from app.models.topic import Topic, TopicStatus, Topic
+from app.models.student import Student
+from app.models.topic import Topic, TopicStatus
+from app.models.declaration import Declaration, Status
+from werkzeug.security import generate_password_hash
+import random
+from datetime import datetime, timedelta
 
 app = create_app('development')
 
-with app.app_context():
+def reset_db():
+    print("Cleaning database...")
+    # Order matters due to foreign keys
+    db.session.query(Declaration).delete()
+    db.session.query(Topic).delete()
+    db.session.query(Student).delete()
+    db.session.query(Teacher).delete()
+    db.session.query(Account).delete()
+    db.session.commit()
+    print("Database cleaned.")
+
+def seed_data():
     print("Seeding data...")
     
-    # Check if supervisor exists
-    account = Account.query.filter_by(login="supervisor").first()
-    if not account:
-        print("Creating supervisor account...")
-        account = Account(
-            full_name="Michał Ślimak",
-            login="supervisor", 
+    # 1. Accounts & Profiles
+    
+    # Administrator
+    admin = Account(
+        full_name="Administrator Systemu",
+        login="admin",
+        password=generate_password_hash("password"),
+        user_type=UserType.ADMINISTRATOR
+    )
+    db.session.add(admin)
+    
+    # Coordinator
+    coord = Account(
+        full_name="Jan Koordynator",
+        login="koordynator",
+        password=generate_password_hash("password"),
+        user_type=UserType.KOORDYNATOR_PRZEDMIOTU
+    )
+    db.session.add(coord)
+    db.session.flush() # to get ID
+
+
+    # KPK Member
+    kpk = Account(
+        full_name="Krzysztof KPK",
+        login="kpk",
+        password=generate_password_hash("password"),
+        user_type=UserType.CZLONEK_KPK
+    )
+    db.session.add(kpk)
+    db.session.flush()
+    
+
+    # Supervisors
+    supervisors = []
+    supervisor_data = [
+        ("Michał Ślimak", "supervisor", Title.dr_hab, Position.PROFESOR_UCZELNI),
+        ("Anna Nowak", "anna.nowak", Title.dr, Position.ADIUNKT),
+        ("Piotr Kowalski", "piotr.kowalski", Title.mgr_inz, Position.ASYTSTENT),
+        ("Maria Wiśniewska", "maria.wisniewska", Title.prof, Position.PROFESOR_UCZELNI),
+        ("Tomasz Zieliński", "tomasz.zielinski", Title.dr_inz, Position.ADIUNKT)
+    ]
+    
+    for name, login, title, position in supervisor_data:
+        acc = Account(
+            full_name=name,
+            login=login,
+            password=generate_password_hash("password"),
             user_type=UserType.PROWADZACY
         )
-        account.set_password("password")
-        db.session.add(account)
-        db.session.commit()
-    
-    teacher = Teacher.query.filter_by(account_id=account.id).first()
-    if not teacher:
-        print("Creating teacher profile...")
-        teacher = Teacher(account_id=account.id, title=Title.dr_hab, position=Position.PROFESOR_UCZELNI)
+        db.session.add(acc)
+        db.session.flush()
+        
+        teacher = Teacher(
+            account_id=acc.id,
+            title=title,
+            position=position
+        )
         db.session.add(teacher)
-        db.session.commit()
+        supervisors.append(teacher)
+
+    # Students
+    students = []
+    for i in range(1, 16):
+        acc = Account(
+            full_name=f"Student {i}",
+            login=f"student{i}",
+            password=generate_password_hash("password"),
+            user_type=UserType.STUDENT
+        )
+        db.session.add(acc)
+        db.session.flush()
         
-    # Check/Create Topics
-    if Topic.query.count() == 0:
-        print("Creating topics...")
+        student = Student(
+            account_id=acc.id,
+            index_number=f"2{i:05d}"
+        )
+        db.session.add(student)
+        students.append(student)
+
+    db.session.commit()
+    print("Users created.")
+
+    # 2. Topics
+    topics = []
+    
+    # Pre-defined topics
+    topic_definitions = [
+        ("Watchout - system rejestracji zdarzeń", "System do zgłaszania zagrożeń.", TopicStatus.OCZEKUJACY),
+        ("System HR dla firm rozproszonych", "Aplikacja webowa do zarządzania HR.", TopicStatus.ZATWIERDZONY),
+        ("Analiza sentymentu w social media", "Wykorzystanie NLP do analizy opinii.", TopicStatus.ZATWIERDZONY),
+        ("Platforma e-learningowa dla seniorów", "Dostępna aplikacja do nauki.", TopicStatus.ODRZUCONY),
+        ("System obsługi magazynu 3D", "Wizualizacja stanów magazynowych.", TopicStatus.OCZEKUJACY),
+        ("Aplikacja mobilna dla biegaczy", "Tracking tras i statystyk.", TopicStatus.ZATWIERDZONY),
+        ("Optymalizacja tras kurierskich", "Algorytmy genetyczne w logistyce.", TopicStatus.ZATWIERDZONY),
+        ("System rezerwacji sal", "Zarządzanie zasobami uczelni.", TopicStatus.OCZEKUJACY),
+        ("Chatbot dla dziekanatu", "Automatyzacja odpowiedzi na pytania.", TopicStatus.ODRZUCONY),
+        ("Inteligentny dom - dashboard", "Panel sterowania IoT.", TopicStatus.ZATWIERDZONY),
+        ("Gra edukacyjna dla dzieci", "Nauka matematyki przez zabawę.", TopicStatus.ZATWIERDZONY),
+        ("System CRM dla małych firm", "Zarządzanie relacjami z klientami.", TopicStatus.OCZEKUJACY)
+    ]
+
+    for title, desc, status in topic_definitions:
+        supervisor = random.choice(supervisors)
+        topic = Topic(
+            title=title,
+            description=desc,
+            status=status,
+            is_open=False,
+            teacher_id=supervisor.id,
+            creation_date=datetime.now() - timedelta(days=random.randint(1, 30))
+        )
+        if status == TopicStatus.ODRZUCONY:
+            topic.rejection_reason = "Temat nie spełnia wymagań formalnych."
         
-        topics = [
-            Topic(
-                title="Watchout - system rejestracji zdarzeń zagrażających bezpieczeństwu",
-                description="System do zgłaszania i monitorowania zagrożeń w czasie rzeczywistym. Aplikacja mobilna i webowa z geolokalizacją.",
-                status=TopicStatus.OCZEKUJACY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Projekt realizuje potrzeby społeczne w zakresie bezpieczeństwa publicznego."
-            ),
-            Topic(
-                title="Rozproszony system zarządzania personelem średnich przedsiębiorstw",
-                description="Aplikacja webowa do zarządzania HR w firmach distributed-first. Obsługa rekrutacji, urlopów i ocen pracowniczych.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Temat odpowiada na rosnące potrzeby rynku pracy."
-            ),
-            Topic(
-                title="System wspomagania diagnostyki medycznej oparty o sztuczną inteligencję",
-                description="Aplikacja wykorzystująca uczenie maszynowe do analizy zdjęć RTG i wspomagania decyzji lekarskich.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Innowacyjne zastosowanie AI w medycynie."
-            ),
-            Topic(
-                title="Platforma e-learningowa z interaktywnymi laboratoriami wirtualnymi",
-                description="System edukacyjny umożliwiający przeprowadzanie eksperymentów w wirtualnym środowisku.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=False,
-                teacher_id=teacher.id
-            ),
-            Topic(
-                title="Aplikacja do zarządzania budżetem domowym z analizą predykcyjną",
-                description="Narzędzie finansowe wykorzystujące ML do przewidywania wydatków i sugerowania oszczędności.",
-                status=TopicStatus.OCZEKUJACY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Projekt ma potencjał komercyjny i edukacyjny."
-            ),
-            Topic(
-                title="System IoT do monitorowania jakości powietrza w miastach",
-                description="Sieć czujników zbierających dane o zanieczyszczeniu powietrza z wizualizacją na mapie.",
-                status=TopicStatus.ODRZUCONY,
-                is_open=False,
-                teacher_id=teacher.id,
-                topic_justification="Projekt z zakresu IoT i ekologii.",
-                rejection_reason="Zbyt duży zakres prac sprzętowych, projekt przekracza ramy programu studiów."
-            ),
-            Topic(
-                title="Blockchain-based system głosowania elektronicznego",
-                description="Bezpieczna platforma do przeprowadzania wyborów online z wykorzystaniem technologii blockchain.",
-                status=TopicStatus.OCZEKUJACY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Innowacyjne zastosowanie blockchain w demokracji cyfrowej."
-            ),
-            Topic(
-                title="Aplikacja mobilna do rozpoznawania roślin z wykorzystaniem Computer Vision",
-                description="Narzędzie dla botaników amatorów pozwalające identyfikować gatunki roślin na podstawie zdjęć.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=True,
-                teacher_id=teacher.id
-            ),
-            Topic(
-                title="System rekomendacji filmów oparty o analizę sentymentu recenzji",
-                description="Platforma wykorzystująca NLP do analizy opinii użytkowników i personalizacji rekomendacji.",
-                status=TopicStatus.ODRZUCONY,
-                is_open=False,
-                teacher_id=teacher.id,
-                topic_justification="Temat z zakresu przetwarzania języka naturalnego.",
-                rejection_reason="Temat jest zbyt podobny do istniejących rozwiązań komercyjnych, brak elementu innowacyjności."
-            ),
-            Topic(
-                title="Generator muzyki AI na podstawie opisów tekstowych",
-                description="Aplikacja wykorzystująca modele generatywne do tworzenia kompozycji muzycznych z promptów.",
-                status=TopicStatus.OCZEKUJACY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Projekt łączy AI z twórczością artystyczną."
-            ),
-            Topic(
-                title="System zarządzania flotą pojazdów dla firm kurierskich",
-                description="Platforma do optymalizacji tras, monitorowania pojazdów i zarządzania dostawami w czasie rzeczywistym.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=False,
-                teacher_id=teacher.id
-            ),
-            Topic(
-                title="Gamifikowana platforma do nauki programowania dla dzieci",
-                description="Interaktywna gra edukacyjna ucząca podstaw kodowania poprzez rozwiązywanie zagadek.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Projekt ma wartość społeczną i edukacyjną."
-            ),
-            Topic(
-                title="VR training simulator dla pracowników służby zdrowia",
-                description="Aplikacja VR do szkolenia personelu medycznego w procedurach ratunkowych.",
-                status=TopicStatus.ODRZUCONY,
-                is_open=False,
-                teacher_id=teacher.id,
-                topic_justification="Innowacyjne wykorzystanie VR w edukacji medycznej.",
-                rejection_reason="Projekt wymaga specjalistycznego sprzętu VR niedostępnego na uczelni."
-            ),
-            Topic(
-                title="Chatbot wspierający zdrowie psychiczne oparty o terapię poznawczo-behawioralną",
-                description="Asystent konwersacyjny oferujący wsparcie emocjonalne i ćwiczenia terapeutyczne.",
-                status=TopicStatus.OCZEKUJACY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Projekt adresuje ważne potrzeby społeczne w zakresie zdrowia mentalnego."
-            ),
-            Topic(
-                title="System wykrywania deepfake'ów w materiałach wideo",
-                description="Narzędzie wykorzystujące deep learning do identyfikacji sfałszowanych treści multimedialnych.",
-                status=TopicStatus.ZATWIERDZONY,
-                is_open=True,
-                teacher_id=teacher.id,
-                topic_justification="Temat związany z cyberbezpieczeństwem i walką z dezinformacją."
-            )
-        ]
+        # Randomly assign justification for some
+        if random.random() > 0.5:
+            topic.topic_justification = "Bardzo ważny temat badawczy."
+
+        db.session.add(topic)
+        topics.append(topic)
+    
+    db.session.commit()
+    print("Topics created.")
+    
+    # 3. Declarations
+    
+    # Assign some approved topics to student groups
+    approved_topics = [t for t in topics if t.status == TopicStatus.ZATWIERDZONY]
+    available_students = list(students)
+    
+    # Create 3 fully formed groups with declarations
+    for i in range(3):
+        if not approved_topics or len(available_students) < 4:
+            break
+            
+        topic = approved_topics.pop()
         
-        db.session.add_all(topics)
-        db.session.commit()
-        print(f"Created {len(topics)} topics.")
+        # Create declaration
+        declaration = Declaration(
+            status=Status.ZLOZONA,
+            submission_date=datetime.now()
+        )
+        db.session.add(declaration)
+        db.session.flush()
         
+        # Link to topic
+        topic.declaration_id = declaration.id
+        topic.is_open = False # Close topic as it has a declaration
+        
+        # Assign 2-4 students
+        group_size = random.randint(2, 4)
+        for _ in range(group_size):
+            if available_students:
+                student = available_students.pop()
+                student.topic_id = topic.id
+                student.is_declaration_approved = True
+    
+    if approved_topics:
+        pending_topic = approved_topics.pop()
+        declaration = Declaration(
+            status=Status.W_PRZYGOTOWANIU,
+            submission_date=datetime.now()
+        )
+        db.session.add(declaration)
+        db.session.flush()
+        pending_topic.declaration_id = declaration.id
+    
+
+    db.session.commit()
+    print("Declarations created.")
     print("Seeding complete.")
+
+if __name__ == '__main__':
+    with app.app_context():
+        reset_db()
+        seed_data()
