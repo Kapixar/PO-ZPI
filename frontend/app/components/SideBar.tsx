@@ -23,9 +23,9 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
             { icon: "list", name: "Zespoły", href: "/topics" },
             { icon: "account_circle", name: "Mój profil" },
         ] : [
-            { icon: "home", name: "Pulpit", href: "/topics" },
+            { icon: "home", name: "Pulpit" },
+            { icon: "list", name: "Lista tematów", href: "/topics" },
             { icon: "account_circle", name: "Mój profil", href: "/my-profile" },
-            { icon: "more_vert", name: "Jeden temat", href: "/topic/5" },
         ];
 
     return (

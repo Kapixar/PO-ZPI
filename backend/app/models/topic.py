@@ -42,6 +42,8 @@ class Topic(db.Model):
             'maxMembers': 4,    # Default, not in DB
             'status': self.status.value,
             'creationDate': self.creation_date.isoformat().split('T')[0],
+            'topicJustification': self.topic_justification,
+            'rejectionReason': self.rejection_reason,
             'supervisor': {
                 'id': self.teacher.id,
                 'firstName': 'Michał', 

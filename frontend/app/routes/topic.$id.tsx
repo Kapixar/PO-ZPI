@@ -34,7 +34,17 @@ function TeamMember({ name, role }: TeamMemberProps) {
     );
 }
 
-const ApproveDialog = () => {
+interface ApproveDialogProps {
+    onConfirm: () => void;
+    onCancel: () => void;
+    isSubmitting: boolean;
+}
+
+const ApproveDialog = ({
+    onConfirm,
+    onCancel,
+    isSubmitting,
+}: ApproveDialogProps) => {
     return (
         <dialog
             id="approve-declaration-dialog"
@@ -44,12 +54,28 @@ const ApproveDialog = () => {
                 <i className="extra">front_hand</i>
                 <h5>Zatwierdzić deklarację ZPI?</h5>
                 <p>
-                    Zatwierdzenie tej akcji wiąże się ze zgodą na uczestnictwo z
+                    Zatwierdzenie tej akcji wiąże się ze zgodą na uczestnictwo w
                     projekcie ZPI z przypisaną grupą.
                 </p>
                 <nav className="right-align no-space">
-                    <button className="transparent link">Cofnij</button>
-                    <button className="transparent link">Zatwierdź</button>
+                    <button
+                        className="transparent link"
+                        onClick={onCancel}
+                        disabled={isSubmitting}
+                    >
+                        Cofnij
+                    </button>
+                    <button
+                        className="transparent link"
+                        onClick={onConfirm}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <progress className="circle small"></progress>
+                        ) : (
+                            "Zatwierdź"
+                        )}
+                    </button>
                 </nav>
             </div>
         </dialog>
@@ -62,6 +88,8 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
     const [topic, setTopic] = useState<Topic | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitSuccess, setSubmitSuccess] = useState(false);
 
     useEffect(() => {
         async function loadTopic() {
@@ -87,13 +115,60 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
         loadTopic();
     }, [params.id]);
 
-    const isDeclarationApproved = false;
+    const isDeclarationApproved = submitSuccess;
+
+    const handleSubmitDeclaration = async () => {
+        if (!topic) return;
+
+        try {
+            setIsSubmitting(true);
+            setError(null);
+            await topicService.submitDeclaration(topic.id);
+            setSubmitSuccess(true);
+
+            // Close the dialog
+            const dialog = document.getElementById(
+                "approve-declaration-dialog",
+            ) as HTMLDialogElement;
+            if (dialog) {
+                dialog.close();
+            }
+
+            // Optionally reload the topic to get updated data
+            const updatedTopic = await topicService.getTopic(params.id);
+            if (updatedTopic) {
+                setTopic(updatedTopic);
+            }
+        } catch (err) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to submit declaration",
+            );
+            console.error("Error submitting declaration:", err);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleCancelDialog = () => {
+        const dialog = document.getElementById(
+            "approve-declaration-dialog",
+        ) as HTMLDialogElement;
+        if (dialog) {
+            dialog.close();
+        }
+    };
 
     return (
         <div className="">
             <SideBar />
             <main className="rounded-2xl large-padding">
-                <ApproveDialog />
+                <ApproveDialog
+                    onConfirm={handleSubmitDeclaration}
+                    onCancel={handleCancelDialog}
+                    isSubmitting={isSubmitting}
+                />
                 <nav>
                     <button
                         className="circle transparent"
@@ -124,6 +199,16 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                     </article>
                 )}
 
+                {submitSuccess && (
+                    <article className="border">
+                        <div>
+                            <i className="extra">check_circle</i>
+                            <h6>Sukces</h6>
+                            <p>Deklaracja została pomyślnie złożona!</p>
+                        </div>
+                    </article>
+                )}
+
                 {!loading && !error && topic && (
                     <>
                         <h3>{topic.title}</h3>
@@ -145,32 +230,38 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                             ))}
                         </div>
 
-                        <h5>Zarządzanie</h5>
+                        {hasRole(UserRole.Student, UserRole.Supervisor) && (
+                            <>
+                                <h5>Zarządzanie</h5>
 
-                        <nav className="group">
-                            {hasRole(UserRole.Student, UserRole.Supervisor) && (
-                                <button
-                                    className="fill small-round"
-                                    disabled={isDeclarationApproved}
-                                    data-ui="#approve-declaration-dialog"
-                                >
-                                    <i>check_box</i>
-                                    <span>Zatwierdź deklarację</span>
-                                </button>
-                            )}
-                            {!topic.isStandard && (
-                                <button className="fill small-round">
-                                    <i>format_size</i>
-                                    <span>
-                                        Uzasadnij niestandardowy rozmiar zespołu
-                                    </span>
-                                </button>
-                            )}
-                            <button className="fill small-round">
-                                <i>group</i>
-                                <span>Zmień stan</span>
-                            </button>
-                        </nav>
+                                <nav className="group">
+                                    <button
+                                        className="fill small-round"
+                                        disabled={isDeclarationApproved}
+                                        data-ui="#approve-declaration-dialog"
+                                    >
+                                        <i>check_box</i>
+                                        <span>Zatwierdź deklarację</span>
+                                    </button>
+                                    {!topic.isStandard &&
+                                        hasRole(UserRole.Supervisor) && (
+                                            <>
+                                                <button className="fill small-round">
+                                                    <i>format_size</i>
+                                                    <span>
+                                                        Uzasadnij niestandardowy
+                                                        rozmiar zespołu
+                                                    </span>
+                                                </button>
+                                                <button className="fill small-round">
+                                                    <i>group</i>
+                                                    <span>Zmień stan</span>
+                                                </button>
+                                            </>
+                                        )}
+                                </nav>
+                            </>
+                        )}
 
                         <h5>Informacje</h5>
                         <ul className="list border">

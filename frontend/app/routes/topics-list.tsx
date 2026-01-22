@@ -31,10 +31,8 @@ export default function Dashboard() {
             try {
                 setLoading(true);
                 setError(null);
-                const supervisor = await topicService.getSupervisor();
-                const fetchedTopics = await topicService.getTopics(
-                    supervisor.id,
-                );
+                const fetchedTopics = await topicService.getAllTopics();
+                
                 setTopics(fetchedTopics);
             } catch (err) {
                 setError(
@@ -248,7 +246,7 @@ export default function Dashboard() {
                             <ProjectListItem
                                 key={topic.id}
                                 id={topic.id}
-                                slots={topic.maxMembers}
+                                slots={topic.maxMembers != null ? topic.maxMembers : 0}
                                 supervisor={`${topic.supervisor.title} ${topic.supervisor.firstName} ${topic.supervisor.lastName}`}
                                 title={topic.title}
                             />

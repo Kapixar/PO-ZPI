@@ -2,12 +2,12 @@ from app import db
 import enum
 
 class Title(enum.Enum):
-    mgr_inz = "mgr_inz"
+    mgr_inz = "mgr inz"
     mgr = "mgr"
     dr = "dr"
-    dr_inz = "dr_inz."
-    dr_hab = "dr_hab"
-    dr_hab_inz = "dr_hab_inz"
+    dr_inz = "dr inz"
+    dr_hab = "dr hab"
+    dr_hab_inz = "dr hab inz"
     prof = "prof"
 
 class Position(enum.Enum):

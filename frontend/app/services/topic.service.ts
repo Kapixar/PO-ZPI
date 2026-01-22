@@ -61,6 +61,14 @@ class TopicService {
         return res.json();
     }
 
+    async getAllTopics(): Promise<Topic[]> {
+        const res = await fetch(
+            this.baseUrl
+        );
+        if (!res.ok) throw new Error("Failed to fetch topics");
+        return res.json();
+    }
+
     async getTopic(id: string): Promise<Topic | undefined> {
         const res = await fetch(`${this.baseUrl}/${id}`);
         // Handle 404 naturally
@@ -149,6 +157,26 @@ class TopicService {
             }
         } catch (error) {
             console.error(`Error rejecting topic ${topicId}:`, error);
+            throw error;
+        }
+    }
+
+    async submitDeclaration(topicId: string, studentId?: string): Promise<void> {
+        try {
+            const response = await fetch(`${this.baseUrl}/${topicId}/declare`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ student_id: studentId }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || `HTTP error! status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Error submitting declaration for topic ${topicId}:`, error);
             throw error;
         }
     }
