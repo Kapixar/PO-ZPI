@@ -14,10 +14,10 @@ export function meta({}: Route.MetaArgs) {
 
 interface TeamMemberProps {
     name: string;
-    role: string;
+    index: string;
 }
 
-function TeamMember({ name, role }: TeamMemberProps) {
+function TeamMember({ name, index }: TeamMemberProps) {
     return (
         <div>
             <i
@@ -28,7 +28,7 @@ function TeamMember({ name, role }: TeamMemberProps) {
             </i>
             <div className="center-align">
                 <h6 className="small bold">{name}</h6>
-                <div className="medium-text">{role}</div>
+                <div className="medium-text">{index}</div>
             </div>
         </div>
     );
@@ -199,13 +199,13 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                         <div className="flex flex-row gap-10">
                             <TeamMember
                                 name={`${topic.supervisor.firstName} ${topic.supervisor.lastName}`}
-                                role={topic.supervisor.title}
+                                index={topic.supervisor.title}
                             />
                             {topic.team.map((student) => (
                                 <TeamMember
                                     key={student.id}
                                     name={`${student.firstName} ${student.lastName}`}
-                                    role={student.id}
+                                    index={student.studentIndex}
                                 />
                             ))}
                         </div>

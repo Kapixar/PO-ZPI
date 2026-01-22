@@ -2,6 +2,7 @@ export interface Student {
     id: string; // index number
     firstName: string;
     lastName: string;
+    studentIndex: string;
     avatar?: string;
 }
 
@@ -11,7 +12,7 @@ export interface Supervisor {
     lastName: string;
     title: string;
     avatar?: string;
-    position: string; 
+    position: string;
 }
 
 export type TopicStatus = "ZATWIERDZONY" | "ODRZUCONY" | "OCZEKUJACY";
@@ -56,16 +57,14 @@ class TopicService {
 
     async getTopics(supervisorId: string): Promise<Topic[]> {
         const res = await fetch(
-            `${this.baseUrl}?supervisor_id=${supervisorId}`
+            `${this.baseUrl}?supervisor_id=${supervisorId}`,
         );
         if (!res.ok) throw new Error("Failed to fetch topics");
         return res.json();
     }
 
     async getAllTopics(): Promise<Topic[]> {
-        const res = await fetch(
-            this.baseUrl
-        );
+        const res = await fetch(this.baseUrl);
         if (!res.ok) throw new Error("Failed to fetch topics");
         return res.json();
     }
@@ -82,7 +81,7 @@ class TopicService {
         topic: Omit<
             Topic,
             "id" | "supervisor" | "status" | "isOpen" | "team" | "creationDate"
-        >
+        >,
     ) {
         const res = await fetch(this.baseUrl, {
             method: "POST",
@@ -174,10 +173,15 @@ class TopicService {
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || `HTTP error! status: ${response.status}`);
+                throw new Error(
+                    error.error || `HTTP error! status: ${response.status}`,
+                );
             }
         } catch (error) {
-            console.error(`Error submitting declaration for topic ${topicId}:`, error);
+            console.error(
+                `Error submitting declaration for topic ${topicId}:`,
+                error,
+            );
             throw error;
         }
     }

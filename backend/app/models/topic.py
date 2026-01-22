@@ -55,6 +55,7 @@ class Topic(db.Model):
                 'id': s.id, 
                 'firstName': 'Jan', 
                 'lastName': "Kowalski",
+                'studentIndex': s.index_number,
                 'declaration': {
                     'id': s.declaration.id,
                     'status': s.declaration.status.value,
