@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
 import { useNavigate } from "react-router";
 import { ProjectListItem } from "~/components/ProjectListItem";
+import { useUser } from "~/contexts/UserContext";
 
 export function meta({}: Route.MetaArgs) {
     return [{ title: "Mój profil" }];
@@ -26,14 +27,15 @@ export default function MyProfile() {
     const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const sup = await topicService.getSupervisor();
+            const sup = await topicService.getSupervisor(user.user_id ?? 0);
             setSupervisor(sup);
 
-            const tops = await topicService.getTopics(sup.id);
+            const tops = await topicService.getTopics(user.user_id ?? 0);
             setTopics(tops);
         } catch (error) {
             console.error("Failed to fetch data", error);
