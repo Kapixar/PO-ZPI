@@ -122,7 +122,7 @@ export default function Dashboard() {
             // --- REAL SERVICE CALL ---
             // Passing single ID as an array to reuse the bulk endpoint, 
             // or use approveTopic(id) if your service has a specific single method.
-            await topicService.approveTopics([selectedTopic.id]);
+            await topicService.approveTopic(selectedTopic.id);
 
             setIsApproving(false);
             setShowApproveSuccess(true);
