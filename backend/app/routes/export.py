@@ -47,8 +47,10 @@ def export_students_by_topic():
                 student.account.full_name if student.account else "",
                 "Tak" if student.topic and student.topic.status == TopicStatus.ZATWIERDZONY else "Nie"
             ]
+
             ws.append(row_data)
         
+
         column_widths = [12, 40, 12, 30, 30]
         for i, width in enumerate(column_widths, 1):
             ws.column_dimensions[chr(64 + i)].width = width
