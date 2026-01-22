@@ -22,6 +22,7 @@ def reset_db():
 
 def get_max_teams_for_position(position):
     """Zwraca maksymalną liczbę zespołów dla danego stanowiska."""
+    # Note: ASYTSTENT matches the typo in the model enum
     if position == Position.ASYTSTENT:
         return 1
     # ADIUNKT, PROFESOR_UCZELNI itp.
@@ -187,7 +188,8 @@ def seed_data():
     decl = Declaration(status=Status.ZLOZONA, submission_date=datetime.now() - timedelta(days=10))
     db.session.add(decl)
     db.session.flush()
-    topic_approved.declaration_id = decl.id
+    # FIX: Changed declaration_id to teacher_declaration_id
+    topic_approved.teacher_declaration_id = decl.id
 
     # --- SCENARIO E: Rejected Topic ---
     # Maria Zielińska (ASYSTENT, Limit 1) -> Usage: 1/1 (MAX REACHED - Odrzucony też się wlicza)
@@ -243,7 +245,7 @@ def seed_data():
             limit = get_max_teams_for_position(t.position)
             current = teacher_loads[t.id]
             
-            # Wszyscy muszą mieć wolny slot, nawet na temat odrzucony
+            # Wszyscy muszą mieć wolny slot
             if current < limit:
                 available_teachers.append(t)
         
@@ -280,7 +282,7 @@ def seed_data():
             d = Declaration(status=Status.ZLOZONA, submission_date=datetime.now())
             db.session.add(d)
             db.session.flush()
-            t.declaration_id = d.id
+            t.teacher_declaration_id = d.id
 
     db.session.commit()
     print("Seeding complete.")
