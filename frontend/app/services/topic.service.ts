@@ -2,6 +2,7 @@ export interface Student {
     id: string; // index number
     firstName: string;
     lastName: string;
+    studentIndex: string;
     avatar?: string;
 }
 
@@ -56,16 +57,14 @@ class TopicService {
 
     async getTopics(supervisorId: string): Promise<Topic[]> {
         const res = await fetch(
-            `${this.baseUrl}?supervisor_id=${supervisorId}`
+            `${this.baseUrl}?supervisor_id=${supervisorId}`,
         );
         if (!res.ok) throw new Error("Failed to fetch topics");
         return res.json();
     }
 
     async getAllTopics(): Promise<Topic[]> {
-        const res = await fetch(
-            this.baseUrl
-        );
+        const res = await fetch(this.baseUrl);
         if (!res.ok) throw new Error("Failed to fetch topics");
         return res.json();
     }
@@ -82,7 +81,7 @@ class TopicService {
         topic: Omit<
             Topic,
             "id" | "supervisor" | "status" | "isOpen" | "team" | "creationDate"
-        >
+        >,
     ) {
         const res = await fetch(this.baseUrl, {
             method: "POST",
@@ -162,22 +161,27 @@ class TopicService {
         }
     }
 
-    async submitDeclaration(topicId: string, studentId?: string): Promise<void> {
+    async submitDeclaration(topicId: string, userId: number): Promise<void> {
         try {
             const response = await fetch(`${this.baseUrl}/${topicId}/declare`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ student_id: studentId }),
+                body: JSON.stringify({ user_id: userId }),
             });
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || `HTTP error! status: ${response.status}`);
+                throw new Error(
+                    error.error || `HTTP error! status: ${response.status}`,
+                );
             }
         } catch (error) {
-            console.error(`Error submitting declaration for topic ${topicId}:`, error);
+            console.error(
+                `Error submitting declaration for topic ${topicId}:`,
+                error,
+            );
             throw error;
         }
     }

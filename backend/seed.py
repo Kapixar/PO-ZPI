@@ -37,23 +37,23 @@ def seed_data():
     # ==========================================
     
     # --- System Roles ---
-    admin = Account(full_name="Administrator Systemu", login="admin", password=password_hash, user_type=UserType.ADMINISTRATOR)
-    coord = Account(full_name="Jan Koordynator", login="koordynator", password=password_hash, user_type=UserType.KOORDYNATOR_PRZEDMIOTU)
-    kpk = Account(full_name="Krzysztof KPK", login="kpk", password=password_hash, user_type=UserType.CZLONEK_KPK)
-    opiekun = Account(full_name="Anna Opiekun", login="opiekun", password=password_hash, user_type=UserType.OPIEKUN_KIERUNKU)
+    admin = Account(full_name="Administrator Systemu", login="admin", password=password_hash, user_type=UserType.ADMIN)
+    coord = Account(full_name="Jan Koordynator", login="koordynator", password=password_hash, user_type=UserType.COORDINATOR)
+    kpk = Account(full_name="Krzysztof KPK", login="kpk", password=password_hash, user_type=UserType.KPK_MEMBER)
+    opiekun = Account(full_name="Anna Opiekun", login="opiekun", password=password_hash, user_type=UserType.PROGRAM_SUPERVISOR)
     
     db.session.add_all([admin, coord, kpk, opiekun])
     db.session.flush()
 
     # --- Teachers ---
     # Specific Supervisors
-    acc_bh = Account(full_name="Michalina Cierpliwa", login="m.cierpliwa", password=password_hash, user_type=UserType.PROWADZACY)
+    acc_bh = Account(full_name="Michalina Cierpliwa", login="m.cierpliwa", password=password_hash, user_type=UserType.TEACHER)
     db.session.add(acc_bh)
     db.session.flush()
     teacher_bh = Teacher(account_id=acc_bh.id, title=Title.dr_inz, position=Position.PROFESOR_UCZELNI)
     db.session.add(teacher_bh)
 
-    acc_ms = Account(full_name="Michał Ślimak", login="m.slimak", password=password_hash, user_type=UserType.PROWADZACY)
+    acc_ms = Account(full_name="Michał Ślimak", login="m.slimak", password=password_hash, user_type=UserType.TEACHER)
     db.session.add(acc_ms)
     db.session.flush()
     teacher_ms = Teacher(account_id=acc_ms.id, title=Title.dr_hab_inz, position=Position.ADIUNKT)
@@ -70,7 +70,7 @@ def seed_data():
     ]
 
     for name, login, title, pos in generic_teachers_data:
-        acc = Account(full_name=name, login=login, password=password_hash, user_type=UserType.PROWADZACY)
+        acc = Account(full_name=name, login=login, password=password_hash, user_type=UserType.TEACHER)
         db.session.add(acc)
         db.session.flush()
         t = Teacher(account_id=acc.id, title=title, position=pos)

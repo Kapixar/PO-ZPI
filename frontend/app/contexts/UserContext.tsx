@@ -9,13 +9,15 @@ import React, {
 export enum UserRole {
     Student = "Student",
     KPK = "KPK",
-    Supervisor = "Prowadzący",
+    Teacher = "Prowadzący",
     Admin = "Administrator",
     Coordinator = "Koordynator",
 }
 
 export interface User {
     role: UserRole;
+    user_id?: number;
+    name?: string;
 }
 
 interface UserContextType {
@@ -27,11 +29,13 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const mockUsers: User[] = [
-    { role: UserRole.Student },
-    { role: UserRole.KPK },
-    { role: UserRole.Supervisor },
-    { role: UserRole.Admin },
-    { role: UserRole.Coordinator },
+    { role: UserRole.Student, user_id: 10, name: "student 10" },
+    { role: UserRole.Student, user_id: 11, name: "student 11" },
+    { role: UserRole.KPK, user_id: 3 },
+    { role: UserRole.Teacher, user_id: 5, name: "anna nowak" },
+    { role: UserRole.Teacher, user_id: 6, name: "piotr kowalski" },
+    { role: UserRole.Admin, user_id: 1 },
+    { role: UserRole.Coordinator, user_id: 2 },
 ];
 
 export function UserProvider({ children }: { children: ReactNode }) {
