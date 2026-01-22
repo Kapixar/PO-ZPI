@@ -1,38 +1,41 @@
 import { SideBar } from "~/components/SideBar";
 import { CreateTopicDialog } from "~/components/CreateTopicDialog";
-import { topicService, type Topic, type Supervisor } from "~/services/topic.service";
+import {
+    topicService,
+    type Topic,
+    type Supervisor,
+} from "~/services/topic.service";
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { ProjectListItem } from "~/components/ProjectListItem";
+import { useUser } from "~/contexts/UserContext";
 
-export function meta({ }: Route.MetaArgs) {
-    return [
-        { title: "Mój profil" },
-    ];
+export function meta({}: Route.MetaArgs) {
+    return [{ title: "Mój profil" }];
 }
 
 // Pomocnicza funkcja do ustalania limitu na podstawie stanowiska
 const getMaxTopics = (position: string = ""): number => {
     // Asystent: max 1 temat, Pozostali: max 2 tematy
-    if (position === "ASYTSTENT") return 1;
-    return 2;
+    if (position === "ASYSTENT") return 1;
+    return 5;
 };
 
 export default function MyProfile() {
     const [topics, setTopics] = useState<Topic[]>([]);
     const [supervisor, setSupervisor] = useState<Supervisor | null>(null);
-    const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { user } = useUser();
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const sup = await topicService.getSupervisor();
+            const sup = await topicService.getSupervisor(user.user_id ?? 0);
             setSupervisor(sup);
-            
-            const tops = await topicService.getTopics(sup.id);
+
+            const tops = await topicService.getTopics(user.user_id ?? 0);
             setTopics(tops);
         } catch (error) {
             console.error("Failed to fetch data", error);
@@ -56,7 +59,10 @@ export default function MyProfile() {
             <main className="responsive max">
                 <header>
                     <nav>
-                        <button className="circle transparent" onClick={() => navigate(-1)}>
+                        <button
+                            className="circle transparent"
+                            onClick={() => navigate(-1)}
+                        >
                             <i>arrow_back</i>
                         </button>
                         <div className="max">
@@ -71,14 +77,20 @@ export default function MyProfile() {
                 <div className="padding">
                     {/* Dane prowadzącego */}
                     <h5 className="mb-2">
-                        {supervisor ? `${supervisor.title} ${supervisor.fullName}` : 'Ładowanie...'}
+                        {supervisor
+                            ? `${supervisor.title} ${supervisor.fullName}`
+                            : "Ładowanie..."}
                     </h5>
                     <div className="text-medium-emphasis mb-8 row">
                         {supervisor && (
                             <>
-                                <span>{supervisor.title} {supervisor.fullName}</span>
+                                <span>
+                                    {supervisor.title} {supervisor.fullName}
+                                </span>
                                 <div className="max"></div>
-                                <span className={`chip small ${isLimitReached ? "error" : "tertiary"}`}>
+                                <span
+                                    className={`chip small ${isLimitReached ? "error" : "tertiary"}`}
+                                >
                                     Limit: {currentTopicCount} / {maxTopics}
                                 </span>
                             </>
@@ -115,7 +127,10 @@ export default function MyProfile() {
                             <span>Limit osiągnięty</span>
                         </button>
                     ) : (
-                        <button className="extended fab tertiary" onClick={() => setShowCreateDialog(true)}>
+                        <button
+                            className="extended fab tertiary"
+                            data-ui="#create-topic-dialog"
+                        >
                             <i>add</i>
                             <span>Dodaj temat</span>
                         </button>
@@ -123,12 +138,7 @@ export default function MyProfile() {
                 </div>
             </main>
 
-            {showCreateDialog && (
-                <CreateTopicDialog
-                    onClose={() => setShowCreateDialog(false)}
-                    onCreated={fetchData}
-                />
-            )}
+            <CreateTopicDialog onCreated={fetchData} />
         </div>
     );
 }

@@ -103,8 +103,8 @@ def create_topic():
 
 @topics_bp.route('/supervisor/me', methods=['GET'])
 def get_me():
-    # Mocking logged-in supervisor
-    teacher = get_default_teacher()
+    supervisor_id = request.args.get('supervisor_id')
+    teacher = Teacher.query.filter_by(account_id=supervisor_id).first()
     if not teacher:
         return jsonify({'error': 'No teacher found'}), 404
         

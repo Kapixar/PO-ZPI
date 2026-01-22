@@ -5,6 +5,7 @@ import React, {
     useEffect,
     type ReactNode,
 } from "react";
+import { userService, type BackendUser } from "~/services/user.service";
 
 export enum UserRole {
     Student = "Student",
@@ -24,21 +25,30 @@ interface UserContextType {
     user: User;
     setUser: (user: User) => void;
     hasRole: (...roles: UserRole[]) => boolean;
+    users: User[];
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const mockUsers: User[] = [
-    { role: UserRole.Student, user_id: 48, name: "student 48" },
-    { role: UserRole.Student, user_id: 43, name: "student 43" },
-    { role: UserRole.KPK, user_id: 3 },
-    { role: UserRole.Teacher, user_id: 5, name: "anna nowak" },
-    { role: UserRole.Teacher, user_id: 6, name: "piotr kowalski" },
-    { role: UserRole.Admin, user_id: 1 },
-    { role: UserRole.Coordinator, user_id: 2 },
-];
+function mapBackendRole(role: string): UserRole {
+    switch (role) {
+        case "STUDENT":
+            return UserRole.Student;
+        case "TEACHER":
+            return UserRole.Teacher;
+        case "KPK_MEMBER":
+            return UserRole.KPK;
+        case "COORDINATOR":
+            return UserRole.Coordinator;
+        case "ADMIN":
+            return UserRole.Admin;
+        default:
+            return UserRole.Student;
+    }
+}
 
 export function UserProvider({ children }: { children: ReactNode }) {
+    const [users, setUsers] = useState<User[]>([]);
     const [user, setUser] = useState<User>(() => {
         if (typeof window !== "undefined") {
             const savedUser = localStorage.getItem("user");
@@ -53,7 +63,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 }
             }
         }
-        return mockUsers[0]; // Default to Student
+        // Default minimal user until API loads
+        return { role: UserRole.KPK };
     });
 
     useEffect(() => {
@@ -62,12 +73,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [user]);
 
+    useEffect(() => {
+        let isMounted = true;
+        (async () => {
+            try {
+                const backendUsers: BackendUser[] = await userService.getAll();
+                const mapped: User[] = backendUsers.map((u) => ({
+                    user_id: u.user_id,
+                    name: u.name ?? undefined,
+                    role: mapBackendRole(u.role),
+                }));
+                if (!isMounted) return;
+                setUsers(mapped);
+                // If current user is placeholder or missing, set default to first fetched
+                if (!user.user_id && mapped.length > 0) {
+                    setUser(mapped[0]);
+                }
+            } catch (e) {
+                console.error("Failed to fetch users", e);
+            }
+        })();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     const hasRole = (...roles: UserRole[]) => {
         return roles.includes(user.role);
     };
 
     return (
-        <UserContext.Provider value={{ user, setUser, hasRole }}>
+        <UserContext.Provider value={{ user, setUser, hasRole, users }}>
             {children}
         </UserContext.Provider>
     );

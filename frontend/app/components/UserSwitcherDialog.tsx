@@ -1,11 +1,11 @@
-import { useUser, mockUsers, type User } from "~/contexts/UserContext";
+import { useUser, type User } from "~/contexts/UserContext";
 
 interface UserSwitcherDialogProps {
     dialogId: string;
 }
 
 export function UserSwitcherDialog({ dialogId }: UserSwitcherDialogProps) {
-    const { user, setUser } = useUser();
+    const { user, setUser, users } = useUser();
 
     const handleUserChange = (selectedUser: User) => {
         setUser(selectedUser);
@@ -16,15 +16,23 @@ export function UserSwitcherDialog({ dialogId }: UserSwitcherDialogProps) {
             <h5>Zmień użytkownika</h5>
             <p>Wybierz użytkownika, aby przetestować różne uprawnienia</p>
             <nav className="group wrap">
-                {mockUsers.map((mockUser) => (
+                {users.map((mockUser) => (
                     <button
                         key={mockUser.role + (mockUser.user_id ?? "")}
                         onClick={() => handleUserChange(mockUser)}
                         className={`chip medium ${
-                            user.role === mockUser.role && user.user_id === mockUser.user_id ? "fill" : ""
+                            user.role === mockUser.role &&
+                            user.user_id === mockUser.user_id
+                                ? "fill"
+                                : ""
                         }`}
                     >
-                        {user.role === mockUser.role && user.user_id === mockUser.user_id ? <i>done</i> : ""}
+                        {user.role === mockUser.role &&
+                        user.user_id === mockUser.user_id ? (
+                            <i>done</i>
+                        ) : (
+                            ""
+                        )}
 
                         <span>{mockUser.role}</span>
                         <span>{mockUser.name}</span>

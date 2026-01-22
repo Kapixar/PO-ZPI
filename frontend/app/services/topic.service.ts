@@ -58,13 +58,15 @@ export type PendingTopicsResponse = {
 class TopicService {
     private baseUrl = "http://localhost:5000/api/topics";
 
-    async getSupervisor(): Promise<Supervisor> {
-        const res = await fetch(`${this.baseUrl}/supervisor/me`);
+    async getSupervisor(supervisorId: number): Promise<Supervisor> {
+        const res = await fetch(
+            `${this.baseUrl}/supervisor/me?supervisor_id=${supervisorId}`,
+        );
         if (!res.ok) throw new Error("Failed to fetch supervisor");
         return res.json();
     }
 
-    async getTopics(supervisorId: string): Promise<Topic[]> {
+    async getTopics(supervisorId: number): Promise<Topic[]> {
         const res = await fetch(
             `${this.baseUrl}?supervisor_id=${supervisorId}`,
         );
