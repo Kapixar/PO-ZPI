@@ -2,7 +2,7 @@ import { SideBar, type SideBarItem } from "~/components/SideBar";
 
 import { useEffect, useState } from "react";
 import { topicService, type PendingTopic } from "~/services/topic.service";
-import { TopicCard } from "~/components/TopicCard";
+import { PendingTopicCard } from "~/components/PendingTopicCard";
 import type { Route } from "../+types/root";
 
 export function meta({ }: Route.MetaArgs) {
@@ -16,25 +16,57 @@ export default function Dashboard() {
     const [topics, setTopics] = useState<PendingTopic[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [selectedStandardIds, setSelectedStandardIds] = useState<Set<number>>(new Set());
 
-    useEffect(() => {
-        const getPending = async () => {
-            try {
-                const topics = topicService.getDemoPendingTopics();
-                setTopics(topics)
-            } catch (err) {
-                setError("error occurred while loading topics")
-            } finally {
-                setLoading(false)
-            }
+
+    const fetchPending = async () => {
+        try {
+            const topics = topicService.getDemoPendingTopics();
+            setTopics(topics)
+        } catch (err) {
+            setError("error occurred while loading topics")
+        } finally {
+            setLoading(false)
         }
-        getPending()
+    }
+    useEffect(() => {
+        fetchPending()
     }, [])
 
     const onArrowClick = (topic: PendingTopic) => {
         //logic with dialogs there
         alert("HELLO")
     }
+
+    const handleCheckboxChange = (topicId: number) => {
+        setSelectedStandardIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(topicId)) {
+                newSet.delete(topicId);
+            } else {
+                newSet.add(topicId);
+            }
+            return newSet;
+        });
+    }
+
+    const handleApproveSelected = async () => {
+        alert("HELLO")
+
+        //logic with dialogs there
+
+        //example code after confiramtion in dialog:
+        /*try {
+            const idsArray = Array.from(selectedStandardIds);
+            await topicService.approveTopics(idsArray);
+            setSelectedStandardIds(new Set());
+            fetchPending()
+        } catch (err) {
+            setError("error while bulk approve")
+        }
+        */
+    }
+
 
     const standardTopics = topics.filter(t => t.student_count === 4);
     const nonStandardTopics = topics.filter(t => t.student_count !== 4);
@@ -46,7 +78,7 @@ export default function Dashboard() {
     return (
         <div className="">
             <SideBar />
-            <main className=" rounded-2xl">
+            <main className="rounded-2xl large-padding">
                 <nav>
                     <button className="circle transparent">
                         <i>arrow_back</i>
@@ -60,34 +92,56 @@ export default function Dashboard() {
                 <h3>Tematy oczekujące na zatwierdzenie</h3>
                 <div className="space"></div>
 
-                <h5>Standardowe ({standardTopics.length})</h5>
+                <div className="row">
+                    <h6>Standardowe ({standardTopics.length})</h6>
+                    <div className="max"></div>
+                    {selectedStandardIds.size > 0 && (
+                        <button
+                            className="fill"
+                            onClick={handleApproveSelected}
+                        >
+                            Zatwierdź zaznaczone ({selectedStandardIds.size})
+                        </button>
+                    )}
+                </div>
                 <div className="space"></div>
 
                 {standardTopics.length > 0 ? (
-                    <div>
+                    <ul className="list border medium-space">
                         {standardTopics.map(topic => (
-                            <TopicCard
-                                key={topic.id}
-                                studentCount={topic.student_count}
-                                teacher={topic.teacher_title + " " + topic.teacher_full_name}
-                                title={topic.title}
-                                onArrowClick={() => onArrowClick(topic)}
-                            />
+                            <li key={topic.id}>
+                                <label className="checkbox">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedStandardIds.has(topic.id)}
+                                        onChange={() => handleCheckboxChange(topic.id)}
+                                    />
+                                    <span></span>
+                                </label>
+                                <button className="circle">{topic.student_count}</button>
+                                <div className="max">
+                                    <div className="small">{topic.teacher_title + " " + topic.teacher_full_name}</div>
+                                    <div className="large">{topic.title}</div>
+                                </div>
+                                <button type="button" onClick={() => onArrowClick(topic)}>
+                                    <i>arrow_forward</i>
+                                </button>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 ) : (
                     <p>Brak standardowych tematów</p>
                 )}
 
                 <div className="space"></div>
 
-                <h5>Niestandardowe ({nonStandardTopics.length})</h5>
+                <h6>Niestandardowe ({nonStandardTopics.length})</h6>
                 <div className="space"></div>
 
                 {nonStandardTopics.length > 0 ? (
-                    <div>
+                    <ul className="list border medium-space">
                         {nonStandardTopics.map(topic => (
-                            <TopicCard
+                            <PendingTopicCard
                                 key={topic.id}
                                 studentCount={topic.student_count}
                                 teacher={topic.teacher_title + " " + topic.teacher_full_name}
@@ -95,7 +149,7 @@ export default function Dashboard() {
                                 onArrowClick={() => onArrowClick(topic)}
                             />
                         ))}
-                    </div>
+                    </ul>
                 ) : (
                     <p>Brak niestandardowych tematów</p>
                 )}
