@@ -4,6 +4,8 @@ from app import db
 from app.models.teacher import Teacher
 from app.models.student import Student
 from app.models.declaration import Declaration, Status
+from app.models.account import Account
+from datetime import datetime
 
 
 topics_bp = Blueprint('topics', __name__, url_prefix='/api/topics')
@@ -73,33 +75,7 @@ def get_topics():
         query = query.filter_by(teacher_id=supervisor_id)
     
     topics = query.all()
-    
-    response_list = []
-    for topic in topics:
-        supervisor_data = None
-        if topic.teacher and topic.teacher.account:
-            full_name_parts = topic.teacher.account.full_name.split(' ', 1)
-            first_name = full_name_parts[0] if len(full_name_parts) > 0 else ''
-            last_name = full_name_parts[1] if len(full_name_parts) > 1 else ''
-            
-            supervisor_data = {
-                'id': str(topic.teacher.id),
-                'firstName': first_name,
-                'lastName': last_name,
-                'title': topic.teacher.title.value if topic.teacher.title else 'dr',
-            }
-        
-        response_list.append({
-            'id': str(topic.id),
-            'title': topic.title,
-            'description': topic.description,
-            'isOpen': topic.is_open,
-            'creationDate': topic.creation_date.isoformat() if topic.creation_date else None,
-            'supervisor': supervisor_data,
-            'status': topic.status.value if topic.status else None
-        })
-    
-    return jsonify(response_list)
+    return jsonify([t.to_dict() for t in topics])
 
 @topics_bp.route('/<int:id>', methods=['GET'])
 def get_topic(id):
@@ -142,77 +118,109 @@ def get_me():
     })
 
 @topics_bp.route('/<int:topic_id>/declare', methods=['POST'])
-def submit_declaration(topic_id):
+def handle_declaration(topic_id):
     """
-    Submit a declaration for a topic as a student.
-    Request body should contain:
-    {
-        "student_id": int (optional, will use first student if not provided)
-    }
+    Handle declaration for a topic. Automatically creates declaration and approves based on user type.
+    Request body: { "user_id": int (account id, required) }
+    - If student: creates/updates their declaration and marks as approved
+    - If teacher: approves the topic declaration and all students
     """
     try:
         data = request.get_json() or {}
+        user_id = data.get('user_id')
         
-        # Find the topic
+        if not user_id:
+            return jsonify({'error': 'user_id is required'}), 400
+        
+        # Get the account and topic
+        account = Account.query.get(user_id)
+        if not account:
+            return jsonify({'error': 'User not found'}), 404
+        
         topic = Topic.query.get_or_404(topic_id)
         
-        # Check if topic already has a declaration
-        if topic.declaration_id:
-            existing_declaration = Declaration.query.get(topic.declaration_id)
-            if existing_declaration and existing_declaration.status == Status.ZLOZONA:
-                return jsonify({
-                    'error': 'Declaration already submitted for this topic'
-                }), 400
+        # Handle STUDENT declaration
+        if account.student:
+            student = account.student
+            
+            # Associate student with topic if not already
+            if student.topic_id != topic_id:
+                student.topic_id = topic_id
+            
+            # Create or update student's personal declaration
+            if not student.declaration_id:
+                student_declaration = Declaration(
+                    status=Status.ZLOZONA,
+                    submission_date=datetime.now()
+                )
+                db.session.add(student_declaration)
+                db.session.flush()
+                student.declaration_id = student_declaration.id
+            else:
+                student_declaration = Declaration.query.get(student.declaration_id)
+                student_declaration.status = Status.ZLOZONA
+                student_declaration.submission_date = datetime.now()
+            
+            # Mark as approved by student
+            student.is_declaration_approved = True
+            
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Declaration created and approved by student',
+                'topic_id': topic.id,
+                'user_id': user_id,
+                'user_type': 'student',
+                'declaration': {
+                    'id': student.declaration_id,
+                    'status': Status.ZLOZONA.value,
+                    'is_approved': True
+                }
+            }), 200
         
-        # Get student (in real app, this would come from authentication)
-        student_id = data.get('student_id')
-        if student_id:
-            student = Student.query.get(student_id)
-            if not student:
-                return jsonify({'error': 'Student not found'}), 404
-        else:
-            # For demo purposes, use first student
-            student = Student.query.first()
-            if not student:
-                return jsonify({'error': 'No student found'}), 404
+        # Handle TEACHER declaration approval
+        elif account.teacher:
+            # Create topic declaration if it doesn't exist
+            if not topic.teacher_declaration_id:
+                topic_declaration = Declaration(
+                    status=Status.ZLOZONA,
+                    submission_date=datetime.now()
+                )
+                db.session.add(topic_declaration)
+                db.session.flush()
+                topic.teacher_declaration_id = topic_declaration.id
+            
+            # Approve all students in the topic
+            approved_students = []
+            for student in topic.students:
+                student.is_declaration_approved = True
+                approved_students.append(student.id)
+            
+            # Update topic status to approved
+            topic.status = TopicStatus.ZATWIERDZONY
+            
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Declaration approved by teacher',
+                'topic_id': topic.id,
+                'user_id': user_id,
+                'user_type': 'teacher',
+                'declaration': {
+                    'id': topic.teacher_declaration_id,
+                    'status': Status.ZLOZONA.value
+                },
+                'topic_status': TopicStatus.ZATWIERDZONY.value,
+                'students_approved': approved_students
+            }), 200
         
-        # Create or update declaration
-        if topic.declaration_id:
-            declaration = Declaration.query.get(topic.declaration_id)
-            declaration.status = Status.ZLOZONA
-            declaration.submission_date = datetime.now()
-        else:
-            declaration = Declaration(
-                status=Status.ZLOZONA,
-                submission_date=datetime.now()
-            )
-            db.session.add(declaration)
-            db.session.flush()  # Get the declaration ID
-            topic.declaration_id = declaration.id
-        
-        # Associate student with topic if not already
-        if student.topic_id != topic_id:
-            student.topic_id = topic_id
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': 'Declaration submitted successfully',
-            'declaration': {
-                'id': declaration.id,
-                'status': declaration.status.value,
-                'submission_date': declaration.submission_date.isoformat()
-            },
-            'topic_id': topic.id,
-            'student_id': student.id
-        }), 200
+        return jsonify({'error': 'User is neither a student nor a teacher'}), 400
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'error': 'Failed to submit declaration',
-            'message': str(e)
-        }), 500
+        return jsonify({'error': 'Failed to handle declaration', 'message': str(e)}), 500
+
+
 
 
 @topics_bp.route('/<int:topic_id>/approve', methods=['PATCH'])

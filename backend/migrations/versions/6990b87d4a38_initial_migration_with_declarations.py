@@ -1,8 +1,8 @@
-"""Initial migration
+"""Initial migration with declarations
 
-Revision ID: a92c89a43203
+Revision ID: 6990b87d4a38
 Revises: 
-Create Date: 2026-01-15 23:29:59.273847
+Create Date: 2026-01-22 12:29:53.534571
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a92c89a43203'
+revision = '6990b87d4a38'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,7 +23,7 @@ def upgrade():
     sa.Column('full_name', sa.String(length=150), nullable=False),
     sa.Column('login', sa.String(length=100), nullable=False),
     sa.Column('password', sa.String(length=255), nullable=False),
-    sa.Column('user_type', sa.Enum('STUDENT', 'PROWADZACY', 'CZLONEK_KPK', 'KOORDYNATOR_PRZEDMIOTU', 'OPIEKUN_KIERUNKU', 'ADMINISTRATOR', name='usertype'), nullable=False),
+    sa.Column('user_type', sa.Enum('STUDENT', 'TEACHER', 'KPK_MEMBER', 'COORDINATOR', 'PROGRAM_SUPERVISOR', 'ADMIN', name='usertype'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('login')
     )
@@ -50,22 +50,23 @@ def upgrade():
     sa.Column('is_open', sa.Boolean(), nullable=True),
     sa.Column('creation_date', sa.DateTime(), nullable=False),
     sa.Column('teacher_id', sa.Integer(), nullable=True),
-    sa.Column('declaration_id', sa.Integer(), nullable=True),
+    sa.Column('teacher_declaration_id', sa.Integer(), nullable=True),
     sa.Column('status', sa.Enum('ZATWIERDZONY', 'ODRZUCONY', 'OCZEKUJACY', name='topicstatus'), nullable=False),
     sa.Column('topic_justification', sa.Text(), nullable=True),
     sa.Column('rejection_reason', sa.Text(), nullable=True),
-    sa.ForeignKeyConstraint(['declaration_id'], ['declaration.id'], ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['teacher_declaration_id'], ['declaration.id'], name='fk_topic_teacher_declaration', ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['teacher_id'], ['teacher.id'], ondelete='SET NULL'),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('declaration_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('student',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('index_number', sa.String(length=6), nullable=False),
     sa.Column('topic_id', sa.Integer(), nullable=True),
+    sa.Column('declaration_id', sa.Integer(), nullable=True),
     sa.Column('is_declaration_approved', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['account.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['declaration_id'], ['declaration.id'], name='fk_student_declaration', ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['topic_id'], ['topic.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('account_id'),

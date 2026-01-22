@@ -18,15 +18,16 @@ export function UserSwitcherDialog({ dialogId }: UserSwitcherDialogProps) {
             <nav className="group">
                 {mockUsers.map((mockUser) => (
                     <button
-                        key={mockUser.role}
+                        key={mockUser.role + (mockUser.user_id ?? "")}
                         onClick={() => handleUserChange(mockUser)}
                         className={`chip medium ${
-                            user.role === mockUser.role ? "fill" : ""
+                            user.role === mockUser.role && user.user_id === mockUser.user_id ? "fill" : ""
                         }`}
                     >
-                        {user.role === mockUser.role ? <i>done</i> : ""}
+                        {user.role === mockUser.role && user.user_id === mockUser.user_id ? <i>done</i> : ""}
 
                         <span>{mockUser.role}</span>
+                        <span>{mockUser.name}</span>
                     </button>
                 ))}
             </nav>
