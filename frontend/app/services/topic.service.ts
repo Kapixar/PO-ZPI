@@ -1,15 +1,23 @@
+export interface Declaration {
+    id: number;
+    status: string;
+    submissionDate: string;
+}
+
 export interface Student {
-    id: string; // index number
-    firstName: string;
-    lastName: string;
+    id: number | string;
+    accountId?: number;
+    fullName: string;
     studentIndex: string;
     avatar?: string;
+    declaration?: Declaration | null;
+    isDeclarationApproved?: boolean;
 }
 
 export interface Supervisor {
-    id: string;
-    firstName: string;
-    lastName: string;
+    id: number | string;
+    accountId?: number;
+    fullName: string;
     title: string;
     avatar?: string;
     position: string;
@@ -28,6 +36,7 @@ export interface Topic {
     team: Student[];
     maxMembers: number;
     creationDate: string;
+    declaration?: Declaration | null;
 }
 export type PendingTopic = {
     id: number;

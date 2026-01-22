@@ -110,8 +110,7 @@ def get_me():
         
     return jsonify({
         'id': teacher.id,
-        'firstName': 'Michał',
-        'lastName': 'Ślimak',
+        'fullName': teacher.account.full_name if teacher.account else 'Michał Ślimak',
         'title': teacher.title.value if teacher.title else 'dr',
         'avatar': 'https://ui-avatars.com/api/?name=Michal+Slimak&background=random'
     })
@@ -142,9 +141,9 @@ def handle_declaration(topic_id):
         if account.student:
             student = account.student
             
-            # Associate student with topic if not already
+            # Validate student is in the topic
             if student.topic_id != topic_id:
-                student.topic_id = topic_id
+                return jsonify({'error': 'Student is not assigned to this topic'}), 403
             
             # Create or update student's personal declaration
             if not student.declaration_id:
@@ -179,6 +178,10 @@ def handle_declaration(topic_id):
         
         # Handle TEACHER declaration approval
         elif account.teacher:
+            # Validate teacher is the supervisor of this topic
+            if topic.teacher_id != account.teacher.id:
+                return jsonify({'error': 'Teacher is not the supervisor of this topic'}), 403
+            
             # Create topic declaration if it doesn't exist
             if not topic.teacher_declaration_id:
                 topic_declaration = Declaration(

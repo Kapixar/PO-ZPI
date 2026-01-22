@@ -4,6 +4,7 @@ import { topicService, type Topic, type Supervisor } from "~/services/topic.serv
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
 import { Link, useNavigate } from "react-router";
+import { ProjectListItem } from "~/components/ProjectListItem";
 
 export function meta({ }: Route.MetaArgs) {
     return [
@@ -70,12 +71,12 @@ export default function MyProfile() {
                 <div className="padding">
                     {/* Dane prowadzącego */}
                     <h5 className="mb-2">
-                        {supervisor ? `${supervisor.title} ${supervisor.firstName} ${supervisor.lastName}` : 'Ładowanie...'}
+                        {supervisor ? `${supervisor.title} ${supervisor.fullName}` : 'Ładowanie...'}
                     </h5>
                     <div className="text-medium-emphasis mb-8 row">
                         {supervisor && (
                             <>
-                                <span>{supervisor.title} {supervisor.firstName} {supervisor.lastName}</span>
+                                <span>{supervisor.title} {supervisor.fullName}</span>
                                 <div className="max"></div>
                                 <span className={`chip small ${isLimitReached ? "error" : "tertiary"}`}>
                                     Limit: {currentTopicCount} / {maxTopics}
@@ -84,25 +85,15 @@ export default function MyProfile() {
                         )}
                     </div>
 
-                    <ul className="list medium-space">
+                    <ul className="list border medium-space">
                         {!loading && topics.length > 0 ? (
                             topics.map((topic) => (
-                                <li key={topic.id}>
-                                    <Link to={`/topic/${topic.id}`} className="row wave">
-                                        <button className="circle tertiary">
-                                            {topic.team ? topic.team.length : 0}
-                                        </button>
-                                        
-                                        <div className="max">
-                                            <div className="small-text">
-                                                {supervisor?.title} {supervisor?.firstName} {supervisor?.lastName}
-                                            </div>
-                                            <div className="text-medium">{topic.title}</div>
-                                        </div>
-                                        
-                                        <i>arrow_forward</i>
-                                    </Link>
-                                </li>
+                                <ProjectListItem
+                                    id={topic.id}
+                                    slots={topic.team ? topic.team.length : 0}
+                                    supervisor={`${supervisor?.title} ${supervisor?.fullName}`}
+                                    title={topic.title}
+                                />
                             ))
                         ) : !loading ? (
                             <div className="center-align padding">

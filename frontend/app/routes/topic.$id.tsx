@@ -19,7 +19,7 @@ interface TeamMemberProps {
 
 function TeamMember({ name, index }: TeamMemberProps) {
     return (
-        <div>
+        <div className="center-align">
             <i
                 style={{ "--_size": "7rem" } as React.CSSProperties}
                 className="fill"
@@ -111,7 +111,36 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
         loadTopic();
     }, [params.id]);
 
-    const isDeclarationApproved = submitSuccess;
+    const currentTeamMember = topic?.team.find((member) => {
+        if (!user.user_id) return false;
+        const memberAccountId = member.accountId;
+        const memberIdNumber =
+            typeof member.id === "string" ? Number(member.id) : member.id;
+        return (
+            memberAccountId === user.user_id ||
+            memberIdNumber === user.user_id ||
+            member.studentIndex === String(user.user_id)
+        );
+    });
+
+    const isSupervisor = Boolean(
+        user.user_id &&
+        topic?.supervisor &&
+        (topic.supervisor.accountId === user.user_id ||
+            (typeof topic.supervisor.id === "string"
+                ? Number(topic.supervisor.id)
+                : topic.supervisor.id) === user.user_id),
+    );
+
+    const canManageDeclaration =
+        (hasRole(UserRole.Student) && currentTeamMember) ||
+        (hasRole(UserRole.Teacher) && isSupervisor);
+
+    const isDeclarationApproved =
+        submitSuccess ||
+        Boolean(currentTeamMember?.isDeclarationApproved) ||
+        currentTeamMember?.declaration?.status === "ZLOZONA" ||
+        (isSupervisor && topic?.declaration?.status === "ZLOZONA");
 
     const handleSubmitDeclaration = async () => {
         if (!topic) return;
@@ -198,31 +227,34 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                         <h5>Zespół</h5>
                         <div className="flex flex-row gap-10">
                             <TeamMember
-                                name={`${topic.supervisor.firstName} ${topic.supervisor.lastName}`}
+                                name={`${topic.supervisor.fullName}`}
                                 index={topic.supervisor.title}
                             />
                             {topic.team.map((student) => (
                                 <TeamMember
                                     key={student.id}
-                                    name={`${student.firstName} ${student.lastName}`}
+                                    name={`${student.fullName}`}
                                     index={student.studentIndex}
                                 />
                             ))}
                         </div>
 
-                        {hasRole(UserRole.Student, UserRole.Teacher) && (
+                        {(canManageDeclaration ||
+                            hasRole(UserRole.Teacher)) && (
                             <>
                                 <h5>Zarządzanie</h5>
 
                                 <nav className="group">
-                                    <button
-                                        className="fill small-round"
-                                        disabled={isDeclarationApproved}
-                                        data-ui="#approve-declaration-dialog"
-                                    >
-                                        <i>check_box</i>
-                                        <span>Zatwierdź deklarację</span>
-                                    </button>
+                                    {canManageDeclaration && (
+                                        <button
+                                            className="fill small-round"
+                                            disabled={isDeclarationApproved}
+                                            data-ui="#approve-declaration-dialog"
+                                        >
+                                            <i>check_box</i>
+                                            <span>Zatwierdź deklarację</span>
+                                        </button>
+                                    )}
                                     {hasRole(UserRole.Teacher) && (
                                         <>
                                             <button className="fill small-round">
@@ -265,9 +297,7 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                                     <h6 className="small">
                                         Liczba członków zespołu
                                     </h6>
-                                    <div>
-                                        {topic.team.length} / {topic.maxMembers}
-                                    </div>
+                                    <div>{topic.team.length}</div>
                                 </div>
                             </li>
                             <li>
