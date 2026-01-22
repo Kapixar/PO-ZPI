@@ -19,6 +19,8 @@ export default function Dashboard() {
     const [topics, setTopics] = useState<Topic[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     // Filter states
     const [sortBy, setSortBy] = useState<"date" | "title" | null>(null);
@@ -75,13 +77,18 @@ export default function Dashboard() {
         });
 
 
-    const onDownloadClick = async () => {
+    const exportTeams = async () => {
         try {
             await ExportService.exportStudentsByTopic();
-
+            setShowDownloadDialog(false);
+            setShowSuccessDialog(true);
         } catch (error) {
             setError("download error")
         }
+    }
+
+    const onDownloadClick = () => {
+        setShowDownloadDialog(true)
     }
 
     return (
@@ -256,6 +263,42 @@ export default function Dashboard() {
                     </ul>
                 )}
             </main>
+
+            {showDownloadDialog && (
+                <>
+                    <div
+                        className="overlay blur active"
+                        onClick={() => setShowDownloadDialog(false)}
+                    ></div>
+                    <dialog className="active">
+                        <h5>Eksport zespołów</h5>
+                        <br />
+                        <div>Czy chcesz wyeksportować listę zespołów ZPI</div>
+                        <nav className="right-align no-space">
+                            <button className="transparent link" onClick={() => setShowDownloadDialog(false)}>Anuluj</button>
+                            <button className="transparent link" onClick={() => {
+                                exportTeams();
+                            }}>Potwierdź</button>
+                        </nav>
+                    </dialog>
+                </>
+            )}
+            {showSuccessDialog && (
+                <>
+                    <div
+                        className="overlay blur active"
+                        onClick={() => setShowSuccessDialog(false)}
+                    ></div>
+                    <dialog className="active">
+                        <h5>Podjęto próbę eksportu listy zespołów ZPI</h5>
+                        <br />
+                        <div>Podjęto próbę eksportu listy zespołów ZPI w formacie .xlsx na twoje urządzenie</div>
+                        <nav className="right-align no-space">
+                            <button className="transparent link" onClick={() => setShowSuccessDialog(false)}>OK</button>
+                        </nav>
+                    </dialog>
+                </>
+            )}
         </div>
     );
 }
