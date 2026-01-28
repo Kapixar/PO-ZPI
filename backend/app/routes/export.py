@@ -24,7 +24,7 @@ def export_students_by_topic():
         header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
         header_font = Font(bold=True, color="FFFFFF")
         
-        headers = ["Topic ID", "Temat", "Nr indeksu", "Imię i Nazwisko", "Temat zatwierdzony przez KPK"]
+        headers = ["Topic ID", "Temat", "Nr indeksu", "Imię i Nazwisko", "Temat zatwierdzony przez KPK", "Prowadzący zatwierdził deklarację","Student zatwierdził deklarację"]
         ws.append(headers)
         
         for cell in ws[1]:
@@ -45,13 +45,15 @@ def export_students_by_topic():
                 student.topic.title if student.topic else "Nie przypisany",
                 student.index_number,
                 student.account.full_name if student.account else "",
-                "Tak" if student.topic and student.topic.status == TopicStatus.ZATWIERDZONY else "Nie"
+                "Tak" if student.topic and student.topic.status == TopicStatus.ZATWIERDZONY else "Nie",
+                "Tak" if student.topic and student.topic.teacher and student.topic.teacher.is_declaration_approved else "Nie",
+                "Tak" if student.is_declaration_approved else "Nie"
             ]
 
             ws.append(row_data)
         
 
-        column_widths = [12, 40, 12, 30, 30]
+        column_widths = [12, 60, 12, 30, 30, 30, 30]
         for i, width in enumerate(column_widths, 1):
             ws.column_dimensions[chr(64 + i)].width = width
         
