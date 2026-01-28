@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { UserRole, useUser } from "~/contexts/UserContext";
 import { UserSwitcherDialog } from "./UserSwitcherDialog";
 
@@ -9,14 +9,15 @@ export type SideBarItem = {
 };
 
 export function SideBar({ items }: { items?: SideBarItem[] }) {
-    const { user, hasRole } = useUser();    
+    const { user, hasRole } = useUser();
+    const location = useLocation();
 
     const data: SideBarItem[] = items
         ? items
         : hasRole(UserRole.KPK)
           ? [
                 { icon: "home", name: "Pulpit" },
-                { icon: "list", name: "Tematy" },
+                { icon: "list", name: "Tematy", href: "/topics" },
                 { icon: "account_circle", name: "Mój profil" },
                 {
                     icon: "hourglass_empty",
@@ -31,15 +32,20 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
                   { icon: "list", name: "Zespoły", href: "/topics" },
                   { icon: "account_circle", name: "Mój profil" },
               ]
-            : [
-                  { icon: "home", name: "Pulpit" },
-                  { icon: "list", name: "Lista tematów", href: "/topics" },
-                  {
-                      icon: "account_circle",
-                      name: "Mój profil",
-                      href: "/my-profile",
-                  },
-              ];
+            : hasRole(UserRole.Student)
+              ? [
+                    { icon: "home", name: "Pulpit" },
+                    { icon: "list", name: "Zespoły", href: "/topics" },
+                ]
+              : [
+                    { icon: "home", name: "Pulpit" },
+                    { icon: "list", name: "Lista tematów", href: "/topics" },
+                    {
+                        icon: "account_circle",
+                        name: "Mój profil",
+                        href: "/my-profile",
+                    },
+                ];
 
     return (
         <>
@@ -48,12 +54,20 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
                     <i>menu</i>
                 </a>
                 <div className="large-space"></div>
-                {data.map((item) => (
-                    <Link key={item.name} to={item.href ?? "#"}>
-                        <i>{item.icon}</i>
-                        <div>{item.name}</div>
-                    </Link>
-                ))}
+                {data.map((item) => {
+                    const isActive = item.href === location.pathname;
+                    return (
+                        <><Link
+                            key={item.name}
+                            to={item.href ?? "#"}
+                            className={`${isActive ? "active" : ""}`}
+                            aria-disabled={!item.href}
+                        >
+                            <i>{item.icon}</i>
+                            <div>{item.name}</div>
+                        </Link><div className="tiny-space"></div></>
+                    );
+                })}
                 <div className="small-space"></div>
                 <a data-ui="#user-dialog">
                     <i>account_circle</i>

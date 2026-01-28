@@ -15,16 +15,18 @@ export function meta({}: Route.MetaArgs) {
 interface TeamMemberProps {
     name: string;
     index: string;
+    isStudent?: boolean;
 }
 
-function TeamMember({ name, index }: TeamMemberProps) {
+function TeamMember({ name, index, isStudent }: TeamMemberProps) {
+    const icon = isStudent ? "school" : "face";
     return (
         <div className="center-align">
             <i
                 style={{ "--_size": "7rem" } as React.CSSProperties}
                 className="fill"
             >
-                face
+                { icon }
             </i>
             <div className="center-align">
                 <h6 className="small bold">{name}</h6>
@@ -229,12 +231,14 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                             <TeamMember
                                 name={`${topic.supervisor.fullName}`}
                                 index={topic.supervisor.title}
+                                isStudent={false}
                             />
                             {topic.team.map((student) => (
                                 <TeamMember
                                     key={student.id}
                                     name={`${student.fullName}`}
                                     index={student.studentIndex}
+                                    isStudent={true}
                                 />
                             ))}
                         </div>
