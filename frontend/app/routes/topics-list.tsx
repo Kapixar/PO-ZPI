@@ -68,15 +68,12 @@ export default function Dashboard() {
                 if (!matchesTitle && !matchesSupervisor) return false;
             }
 
-            console.log(topic);
-            
-
             // Open status filter
-            if (showOpenOnly && !topic.isOpen)
-                return false;
+            if (showOpenOnly && !topic.isOpen) return false;
 
             // Approved status filter
-            if (showApprovedOnly && topic.status !== "ZATWIERDZONY") return false;
+            if (showApprovedOnly && topic.status !== "ZATWIERDZONY")
+                return false;
 
             // Min members filter
             if (minMembers !== null && topic.team.length < minMembers)
@@ -120,231 +117,224 @@ export default function Dashboard() {
 
     return (
         <div className="">
-            <SideBar />
-            <main className="rounded-2xl large-padding">
-                <nav>
-                    <button className="circle transparent">
-                        <i>arrow_back</i>
-                    </button>
-                    <div className="max"></div>
-                    {hasRole(UserRole.Coordinator) && (
-                        <button
-                            className="circle transparent"
-                            onClick={onDownloadClick}
-                        >
-                            <i>download</i>
-                        </button>
-                    )}
-                    <button className="circle transparent">
-                        <i>more_vert</i>
-                    </button>
-                </nav>
-                <h3>
-                    {hasRole(UserRole.Coordinator)
-                        ? "Lista zespołów ZPI"
-                        : "Lista tematów ZPI"}
-                </h3>
-
-                <nav className="wrap">
-                    <i>filter_list</i>
-                    <div className="field small prefix border-[.0625rem] border-(--outline-variant) round">
-                        <i className="front">search</i>
-                        <input
-                            className="no-elevate"
-                            placeholder="Szukaj..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <button className="chip medium">
-                            <span>
-                                {sortBy
-                                    ? "Sortuj: " +
-                                      (sortBy === "title-asc"
-                                          ? "Nazwa ↑"
-                                          : sortBy === "title-desc"
-                                            ? "Nazwa ↓"
-                                            : sortBy === "members-asc"
-                                              ? "Liczba osób ↑"
-                                              : "Liczba osób ↓")
-                                    : "Sortuj"}
-                            </span>
-                            <i>arrow_drop_down</i>
-                        </button>
-                        <menu className="">
-                            <li onClick={() => setSortBy("title-asc")}>
-                                <span>Nazwa ↑</span>
-                            </li>
-                            <li onClick={() => setSortBy("title-desc")}>
-                                <span>Nazwa ↓</span>
-                            </li>
-                            <li onClick={() => setSortBy("members-asc")}>
-                                <span>Liczba osób ↑</span>
-                            </li>
-                            <li onClick={() => setSortBy("members-desc")}>
-                                <span>Liczba osób ↓</span>
-                            </li>
-                            {sortBy && <div className="divider"></div>}
-                            {sortBy && (
-                                <li onClick={() => setSortBy(null)}>
-                                    <i>clear</i>
-                                    <span>Wyczyść</span>
-                                </li>
-                            )}
-                        </menu>
-                    </div>
+            <nav>
+                <button className="circle transparent">
+                    <i>arrow_back</i>
+                </button>
+                <div className="max"></div>
+                {hasRole(UserRole.Coordinator) && (
                     <button
-                        className={`chip medium ${showOpenOnly ? "fill" : ""}`}
-                        onClick={() => setShowOpenOnly(!showOpenOnly)}
+                        className="circle transparent"
+                        onClick={onDownloadClick}
                     >
-                        {showOpenOnly && <i>check</i>}
-                        <span>Otwarty</span>
+                        <i>download</i>
                     </button>
-                    <button
-                        className={`chip medium ${showApprovedOnly ? "fill" : ""}`}
-                        onClick={() => setShowApprovedOnly(!showApprovedOnly)}
-                    >
-                        {showApprovedOnly && <i>check</i>}
-                        <span>Zatwierdzony</span>
+                )}
+                <button className="circle transparent">
+                    <i>more_vert</i>
+                </button>
+            </nav>
+            <h3>
+                {hasRole(UserRole.Coordinator)
+                    ? "Lista zespołów ZPI"
+                    : "Lista tematów ZPI"}
+            </h3>
+
+            <nav className="wrap">
+                <i>filter_list</i>
+                <div className="field small prefix border-[.0625rem] border-(--outline-variant) round">
+                    <i className="front">search</i>
+                    <input
+                        className="no-elevate"
+                        placeholder="Szukaj..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <button className="chip medium">
+                        <span>
+                            {sortBy
+                                ? "Sortuj: " +
+                                  (sortBy === "title-asc"
+                                      ? "Nazwa ↑"
+                                      : sortBy === "title-desc"
+                                        ? "Nazwa ↓"
+                                        : sortBy === "members-asc"
+                                          ? "Liczba osób ↑"
+                                          : "Liczba osób ↓")
+                                : "Sortuj"}
+                        </span>
+                        <i>arrow_drop_down</i>
                     </button>
+                    <menu className="">
+                        <li onClick={() => setSortBy("title-asc")}>
+                            <span>Nazwa ↑</span>
+                        </li>
+                        <li onClick={() => setSortBy("title-desc")}>
+                            <span>Nazwa ↓</span>
+                        </li>
+                        <li onClick={() => setSortBy("members-asc")}>
+                            <span>Liczba osób ↑</span>
+                        </li>
+                        <li onClick={() => setSortBy("members-desc")}>
+                            <span>Liczba osób ↓</span>
+                        </li>
+                        {sortBy && <div className="divider"></div>}
+                        {sortBy && (
+                            <li onClick={() => setSortBy(null)}>
+                                <i>clear</i>
+                                <span>Wyczyść</span>
+                            </li>
+                        )}
+                    </menu>
+                </div>
+                <button
+                    className={`chip medium ${showOpenOnly ? "fill" : ""}`}
+                    onClick={() => setShowOpenOnly(!showOpenOnly)}
+                >
+                    {showOpenOnly && <i>check</i>}
+                    <span>Otwarty</span>
+                </button>
+                <button
+                    className={`chip medium ${showApprovedOnly ? "fill" : ""}`}
+                    onClick={() => setShowApprovedOnly(!showApprovedOnly)}
+                >
+                    {showApprovedOnly && <i>check</i>}
+                    <span>Zatwierdzony</span>
+                </button>
+                <div>
+                    <button className="chip medium">
+                        <span>
+                            {minMembers !== null
+                                ? `Min: ${minMembers}`
+                                : "Min liczba osób"}
+                        </span>
+                        <i>arrow_drop_down</i>
+                    </button>
+                    <menu className="">
+                        <li onClick={() => setMinMembers(1)}>
+                            <span>1</span>
+                        </li>
+                        <li onClick={() => setMinMembers(2)}>
+                            <span>2</span>
+                        </li>
+                        <li onClick={() => setMinMembers(3)}>
+                            <span>3</span>
+                        </li>
+                        <li onClick={() => setMinMembers(4)}>
+                            <span>4</span>
+                        </li>
+                        <li onClick={() => setMinMembers(5)}>
+                            <span>5</span>
+                        </li>
+                        {minMembers !== null && <div className="divider"></div>}
+                        {minMembers !== null && (
+                            <li onClick={() => setMinMembers(null)}>
+                                <i>clear</i>
+                                <span>Wyczyść</span>
+                            </li>
+                        )}
+                    </menu>
+                </div>
+                <div>
+                    <button className="chip medium">
+                        <span>
+                            {maxMembers !== null
+                                ? `Max: ${maxMembers}`
+                                : "Max liczba osób"}
+                        </span>
+                        <i>arrow_drop_down</i>
+                    </button>
+                    <menu className="">
+                        <li onClick={() => setMaxMembers(1)}>
+                            <span>1</span>
+                        </li>
+                        <li onClick={() => setMaxMembers(2)}>
+                            <span>2</span>
+                        </li>
+                        <li onClick={() => setMaxMembers(3)}>
+                            <span>3</span>
+                        </li>
+                        <li onClick={() => setMaxMembers(4)}>
+                            <span>4</span>
+                        </li>
+                        <li onClick={() => setMaxMembers(5)}>
+                            <span>5</span>
+                        </li>
+                        {maxMembers !== null && <div className="divider"></div>}
+                        {maxMembers !== null && (
+                            <li onClick={() => setMaxMembers(null)}>
+                                <i>clear</i>
+                                <span>Wyczyść</span>
+                            </li>
+                        )}
+                    </menu>
+                </div>
+            </nav>
+
+            <div className="space"></div>
+
+            {loading && (
+                <div className="center-align">
+                    <progress className="circle wavy large"></progress>
+                    <p>Ładowanie tematów...</p>
+                </div>
+            )}
+
+            {error && (
+                <article className="border error">
                     <div>
-                        <button className="chip medium">
-                            <span>
-                                {minMembers !== null
-                                    ? `Min: ${minMembers}`
-                                    : "Min liczba osób"}
-                            </span>
-                            <i>arrow_drop_down</i>
-                        </button>
-                        <menu className="">
-                            <li onClick={() => setMinMembers(1)}>
-                                <span>1</span>
-                            </li>
-                            <li onClick={() => setMinMembers(2)}>
-                                <span>2</span>
-                            </li>
-                            <li onClick={() => setMinMembers(3)}>
-                                <span>3</span>
-                            </li>
-                            <li onClick={() => setMinMembers(4)}>
-                                <span>4</span>
-                            </li>
-                            <li onClick={() => setMinMembers(5)}>
-                                <span>5</span>
-                            </li>
-                            {minMembers !== null && (
-                                <div className="divider"></div>
-                            )}
-                            {minMembers !== null && (
-                                <li onClick={() => setMinMembers(null)}>
-                                    <i>clear</i>
-                                    <span>Wyczyść</span>
-                                </li>
-                            )}
-                        </menu>
+                        <i className="extra">error</i>
+                        <h6>Błąd</h6>
+                        <p>{error}</p>
                     </div>
+                </article>
+            )}
+
+            {!loading && !error && topics.length === 0 && (
+                <article className="border">
+                    <i className="extra">info</i>
                     <div>
-                        <button className="chip medium">
-                            <span>
-                                {maxMembers !== null
-                                    ? `Max: ${maxMembers}`
-                                    : "Max liczba osób"}
-                            </span>
-                            <i>arrow_drop_down</i>
-                        </button>
-                        <menu className="">
-                            <li onClick={() => setMaxMembers(1)}>
-                                <span>1</span>
-                            </li>
-                            <li onClick={() => setMaxMembers(2)}>
-                                <span>2</span>
-                            </li>
-                            <li onClick={() => setMaxMembers(3)}>
-                                <span>3</span>
-                            </li>
-                            <li onClick={() => setMaxMembers(4)}>
-                                <span>4</span>
-                            </li>
-                            <li onClick={() => setMaxMembers(5)}>
-                                <span>5</span>
-                            </li>
-                            {maxMembers !== null && (
-                                <div className="divider"></div>
-                            )}
-                            {maxMembers !== null && (
-                                <li onClick={() => setMaxMembers(null)}>
-                                    <i>clear</i>
-                                    <span>Wyczyść</span>
-                                </li>
-                            )}
-                        </menu>
+                        <h6>Brak tematów</h6>
+                        <p>Nie znaleziono żadnych tematów.</p>
                     </div>
-                </nav>
+                </article>
+            )}
 
-                <div className="space"></div>
-
-                {loading && (
-                    <div className="center-align">
-                        <progress className="circle wavy large"></progress>
-                        <p>Ładowanie tematów...</p>
-                    </div>
-                )}
-
-                {error && (
-                    <article className="border error">
-                        <div>
-                            <i className="extra">error</i>
-                            <h6>Błąd</h6>
-                            <p>{error}</p>
-                        </div>
-                    </article>
-                )}
-
-                {!loading && !error && topics.length === 0 && (
+            {!loading &&
+                !error &&
+                topics.length > 0 &&
+                filteredTopics.length === 0 && (
                     <article className="border">
                         <i className="extra">info</i>
                         <div>
-                            <h6>Brak tematów</h6>
-                            <p>Nie znaleziono żadnych tematów.</p>
+                            <h6>Brak wyników</h6>
+                            <p>
+                                Nie znaleziono tematów spełniających wybrane
+                                kryteria.
+                            </p>
                         </div>
                     </article>
                 )}
 
-                {!loading &&
-                    !error &&
-                    topics.length > 0 &&
-                    filteredTopics.length === 0 && (
-                        <article className="border">
-                            <i className="extra">info</i>
-                            <div>
-                                <h6>Brak wyników</h6>
-                                <p>
-                                    Nie znaleziono tematów spełniających wybrane
-                                    kryteria.
-                                </p>
-                            </div>
-                        </article>
-                    )}
-
-                {!loading && !error && filteredTopics.length > 0 && (
-                    <ul className="list border medium-space">
-                        {filteredTopics.map((topic) => (
-                            <ProjectListItem
-                                key={topic.id}
-                                id={topic.id}
-                                slots={
-                                    topic.team.length != null
-                                        ? topic.team.length
-                                        : 0
-                                }
-                                supervisor={`${topic.supervisor.title} ${topic.supervisor.fullName}`}
-                                title={topic.title}
-                            />
-                        ))}
-                    </ul>
-                )}
-            </main>
+            {!loading && !error && filteredTopics.length > 0 && (
+                <ul className="list border medium-space">
+                    {filteredTopics.map((topic) => (
+                        <ProjectListItem
+                            key={topic.id}
+                            id={topic.id}
+                            slots={
+                                topic.team.length != null
+                                    ? topic.team.length
+                                    : 0
+                            }
+                            supervisor={`${topic.supervisor.title} ${topic.supervisor.fullName}`}
+                            title={topic.title}
+                        />
+                    ))}
+                </ul>
+            )}
 
             {showDownloadDialog && (
                 <>
