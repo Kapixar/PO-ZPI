@@ -49,29 +49,31 @@ function mapBackendRole(role: string): UserRole {
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const [users, setUsers] = useState<User[]>([]);
-    const [user, setUser] = useState<User>(() => {
-        if (typeof window !== "undefined") {
-            const savedUser = localStorage.getItem("user");
-            if (savedUser) {
-                try {
-                    const parsed = JSON.parse(savedUser);
-                    if (parsed && parsed.role) {
-                        return parsed;
-                    }
-                } catch (e) {
-                    console.error("Failed to parse user from localStorage", e);
+    const [user, setUser] = useState<User>({ role: UserRole.KPK });
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    // Hydrate from localStorage after mount
+    useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            try {
+                const parsed = JSON.parse(savedUser);
+                if (parsed && parsed.role) {
+                    setUser(parsed);
                 }
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
             }
         }
-        // Default minimal user until API loads
-        return { role: UserRole.KPK };
-    });
+        setIsHydrated(true);
+    }, []);
 
+    // Save to localStorage whenever user changes (after hydration)
     useEffect(() => {
-        if (typeof window !== "undefined") {
+        if (isHydrated) {
             localStorage.setItem("user", JSON.stringify(user));
         }
-    }, [user]);
+    }, [user, isHydrated]);
 
     useEffect(() => {
         let isMounted = true;

@@ -57,15 +57,15 @@ export function SideBar({ items }: { items?: SideBarItem[] }) {
                 {data.map((item) => {
                     const isActive = item.href === location.pathname;
                     return (
-                        <><Link
-                            key={item.name}
+                        <Link
                             to={item.href ?? "#"}
+                            key={item.name}
                             className={`${isActive ? "active" : ""}`}
                             aria-disabled={!item.href}
                         >
                             <i>{item.icon}</i>
                             <div>{item.name}</div>
-                        </Link><div className="tiny-space"></div></>
+                        </Link>
                     );
                 })}
                 <div className="small-space"></div>
