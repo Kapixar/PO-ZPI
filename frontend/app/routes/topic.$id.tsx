@@ -1,10 +1,14 @@
-import { SideBar } from "~/components/SideBar";
 import type { Route } from "./+types/topic.$id";
 import { UserRole, useUser } from "~/contexts/UserContext";
 import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
 import { useNavigate } from "react-router";
-import { formatDate } from "~/utility/util";
+import { ApproveDeclarationDialog } from "~/components/topic-details/DeclarationApproveDialog";
+import { TeamMember } from "~/components/topic-details/TeamMember";
+import { NotificationBox } from "~/components/NotificationBox";
+import { TopicManagement } from "~/components/topic-details/TopicManagement";
+import { TopicInformation } from "~/components/topic-details/TopicInformation";
+import { LoadingInformation } from "~/components/LoadingInformation";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -12,76 +16,6 @@ export function meta({}: Route.MetaArgs) {
         { name: "description", content: "Szczegóły tematu ZPI" },
     ];
 }
-
-interface TeamMemberProps {
-    name: string;
-    index: string;
-    isStudent?: boolean;
-    showDeclarationLack?: boolean;
-}
-
-function TeamMember({ name, index, isStudent, showDeclarationLack }: TeamMemberProps) {
-    const icon = isStudent ? "school" : "face";
-    return (
-        <div className="center-align">
-            <i
-                style={{ "--_size": "7rem" } as React.CSSProperties}
-                className="fill"
-            >
-                {icon}
-            </i>
-            {showDeclarationLack && <span className="badge no-round border">nie złożono deklaracji</span>}
-            <div className="center-align">
-                <h6 className="small bold">{name}</h6>
-                <div className="medium-text">{index}</div>
-            </div>
-        </div>
-    );
-}
-
-interface ApproveDialogProps {
-    onConfirm: () => void;
-    isSubmitting: boolean;
-}
-
-const ApproveDialog = ({ onConfirm, isSubmitting }: ApproveDialogProps) => {
-    return (
-        <dialog
-            id="approve-declaration-dialog"
-            className="middle-align center-align"
-        >
-            <div>
-                <i className="extra">front_hand</i>
-                <h5>Zatwierdzić deklarację ZPI?</h5>
-                <p>
-                    Zatwierdzenie tej akcji wiąże się ze zgodą na uczestnictwo w
-                    projekcie ZPI z przypisaną grupą.
-                </p>
-                <nav className="right-align no-space">
-                    <button
-                        className="transparent link"
-                        data-ui="#approve-declaration-dialog"
-                        disabled={isSubmitting}
-                    >
-                        Cofnij
-                    </button>
-                    <button
-                        className="transparent link"
-                        onClick={onConfirm}
-                        data-ui="#approve-declaration-dialog"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? (
-                            <progress className="circle small"></progress>
-                        ) : (
-                            "Zatwierdź"
-                        )}
-                    </button>
-                </nav>
-            </div>
-        </dialog>
-    );
-};
 
 export default function TopicDetail({ params }: Route.ComponentProps) {
     const { hasRole, user } = useUser();
@@ -127,8 +61,6 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
         );
     });
 
-    console.log("topci", loading);
-
     const isSupervisor = Boolean(
         user.user_id &&
         topic?.supervisor &&
@@ -141,8 +73,6 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
     const isUserTeamMember =
         Boolean(currentTeamMemberUser) ||
         (hasRole(UserRole.Teacher) && isSupervisor);
-
-    console.log(currentTeamMemberUser);
 
     const isDeclarationApproved =
         submitSuccess ||
@@ -180,7 +110,7 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
 
     return (
         <div>
-            <ApproveDialog
+            <ApproveDeclarationDialog
                 onConfirm={handleSubmitDeclaration}
                 isSubmitting={isSubmitting}
             />
@@ -197,31 +127,12 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                 </button>
             </nav>
 
-            {loading && (
-                <div className="center-align">
-                    <progress className="circle wavy large"></progress>
-                    <p>Ładowanie tematu...</p>
-                </div>
-            )}
+            {loading && <LoadingInformation message="Ładowanie tematu..." />}
 
-            {error && (
-                <article className="border error">
-                    <div>
-                        <i className="extra">error</i>
-                        <h6>Błąd</h6>
-                        <p>{error}</p>
-                    </div>
-                </article>
-            )}
+            {error && <NotificationBox message={error} isError={true} />}
 
             {submitSuccess && (
-                <article className="border">
-                    <div>
-                        <i className="extra">check_circle</i>
-                        <h6>Sukces</h6>
-                        <p>Deklaracja została pomyślnie złożona!</p>
-                    </div>
-                </article>
+                <NotificationBox message="Deklaracja została pomyślnie złożona!" />
             )}
 
             {!loading && !error && topic && (
@@ -236,7 +147,9 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                             name={`${topic.supervisor.fullName}`}
                             index={topic.supervisor.title}
                             isStudent={false}
-                            showDeclarationLack={isUserTeamMember && !isDeclarationApproved}
+                            showDeclarationLack={
+                                isUserTeamMember && !isDeclarationApproved
+                            }
                         />
                         {topic.team.map((student) => (
                             <TeamMember
@@ -244,84 +157,21 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                                 name={`${student.fullName}`}
                                 index={student.studentIndex}
                                 isStudent={true}
-                                showDeclarationLack={isUserTeamMember && !student.isDeclarationApproved}
+                                showDeclarationLack={
+                                    isUserTeamMember &&
+                                    !student.isDeclarationApproved
+                                }
                             />
                         ))}
                     </div>
 
-                    {(isSupervisor || isUserTeamMember) && (
-                        <>
-                            <h5>Zarządzanie</h5>
+                    <TopicManagement
+                        isSupervisor={isSupervisor}
+                        isUserTeamMember={isUserTeamMember}
+                        isDeclarationApproved={isDeclarationApproved}
+                    />
 
-                            <nav className="group">
-                                {isUserTeamMember && (
-                                    <button
-                                        className="fill small-round"
-                                        disabled={isDeclarationApproved}
-                                        data-ui="#approve-declaration-dialog"
-                                    >
-                                        <i>check_box</i>
-                                        <span>
-                                            {isDeclarationApproved
-                                                ? "Deklaracja zatwierdzona"
-                                                : "Zatwierdź deklarację"}
-                                        </span>
-                                    </button>
-                                )}
-                                {hasRole(UserRole.Teacher) && (
-                                    <>
-                                        <button className="fill small-round">
-                                            <i>format_size</i>
-                                            <span>
-                                                Uzasadnij niestandardowy rozmiar
-                                                zespołu
-                                            </span>
-                                        </button>
-                                        <button className="fill small-round">
-                                            <i>group</i>
-                                            <span>Zmień stan</span>
-                                        </button>
-                                    </>
-                                )}
-                            </nav>
-                        </>
-                    )}
-
-                    <h5>Informacje</h5>
-                    <ul className="list border">
-                        <li>
-                            <div className="max">
-                                <h6 className="small">Stan zespołu</h6>
-                                <div>
-                                    {topic.isOpen
-                                        ? "Oczekuje na nowych członków"
-                                        : "Zespół kompletny"}
-                                </div>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="max">
-                                <h6 className="small">Status tematu</h6>
-                                <div>{topic.status}</div>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="max">
-                                <h6 className="small">
-                                    Liczba członków zespołu
-                                </h6>
-                                <div>{topic.team.length}</div>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="max">
-                                <h6 className="small">
-                                    Data utworzenia tematu
-                                </h6>
-                                <div>{formatDate(topic.creationDate)}</div>
-                            </div>
-                        </li>
-                    </ul>
+                    <TopicInformation topic={topic} />
                 </>
             )}
         </div>

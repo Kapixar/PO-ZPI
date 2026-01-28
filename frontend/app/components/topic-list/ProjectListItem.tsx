@@ -1,18 +1,18 @@
 import { Link } from "react-router";
 
-interface ProjectItemProps {
+interface TopicItemProps {
     id: string;
     slots: number;
     supervisor: string;
     title: string;
 }
 
-export function ProjectListItem({
+export function TopicListItem({
     id,
     slots,
     supervisor,
     title,
-}: ProjectItemProps) {
+}: TopicItemProps) {
     return (
         <li>
             <Link to={`/topic/${id}`} className="row wave">

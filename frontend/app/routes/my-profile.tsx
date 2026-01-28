@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/my-profile";
 import { useNavigate } from "react-router";
-import { ProjectListItem } from "~/components/ProjectListItem";
+import { TopicListItem } from "~/components/topic-list/ProjectListItem";
 import { useUser } from "~/contexts/UserContext";
 
 export function meta({}: Route.MetaArgs) {
@@ -98,7 +98,7 @@ export default function MyProfile() {
                 <ul className="list border medium-space">
                     {!loading && topics.length > 0 ? (
                         topics.map((topic) => (
-                            <ProjectListItem
+                            <TopicListItem
                                 id={topic.id}
                                 slots={topic.team ? topic.team.length : 0}
                                 supervisor={`${supervisor?.title} ${supervisor?.fullName}`}

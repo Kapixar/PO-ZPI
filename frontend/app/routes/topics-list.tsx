@@ -1,10 +1,13 @@
 import { SideBar } from "~/components/SideBar";
-import { ProjectListItem } from "~/components/ProjectListItem";
+import { TopicListItem } from "~/components/topic-list/ProjectListItem";
 import type { Route } from "../+types/root";
 import { UserRole, useUser } from "~/contexts/UserContext";
 import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
 import { exportService } from "~/services/export.service";
+import { NotificationBox } from "~/components/NotificationBox";
+import { LoadingInformation } from "~/components/LoadingInformation";
+import { useTopicFilters } from "~/hooks/useTopicFilters";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -21,15 +24,21 @@ export default function Dashboard() {
     const [showDownloadDialog, setShowDownloadDialog] = useState(false);
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
-    // Filter states
-    const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState<
-        "title-asc" | "title-desc" | "members-asc" | "members-desc" | null
-    >(null);
-    const [showOpenOnly, setShowOpenOnly] = useState(false);
-    const [showApprovedOnly, setShowApprovedOnly] = useState(false);
-    const [minMembers, setMinMembers] = useState<number | null>(null);
-    const [maxMembers, setMaxMembers] = useState<number | null>(null);
+    const {
+        searchQuery,
+        setSearchQuery,
+        sortBy,
+        setSortBy,
+        showOpenOnly,
+        setShowOpenOnly,
+        showApprovedOnly,
+        setShowApprovedOnly,
+        minMembers,
+        setMinMembers,
+        maxMembers,
+        setMaxMembers,
+        filteredTopics,
+    } = useTopicFilters(topics);
 
     useEffect(() => {
         async function loadTopics() {
@@ -50,56 +59,8 @@ export default function Dashboard() {
                 setLoading(false);
             }
         }
-
         loadTopics();
     }, []);
-
-    // Filter and sort topics
-    const filteredTopics = topics
-        .filter((topic) => {
-            // Search filter
-            if (searchQuery) {
-                const query = searchQuery.toLowerCase();
-                const matchesTitle = topic.title.toLowerCase().includes(query);
-                const matchesSupervisor =
-                    `${topic.supervisor.title} ${topic.supervisor.fullName}`
-                        .toLowerCase()
-                        .includes(query);
-                if (!matchesTitle && !matchesSupervisor) return false;
-            }
-
-            // Open status filter
-            if (showOpenOnly && !topic.isOpen) return false;
-
-            // Approved status filter
-            if (showApprovedOnly && topic.status !== "ZATWIERDZONY")
-                return false;
-
-            // Min members filter
-            if (minMembers !== null && topic.team.length < minMembers)
-                return false;
-
-            // Max members filter
-            if (maxMembers !== null && topic.team.length > maxMembers)
-                return false;
-
-            return true;
-        })
-        .sort((a, b) => {
-            if (sortBy === "title-asc") {
-                return a.title.localeCompare(b.title);
-            }
-            if (sortBy === "title-desc") {
-                return b.title.localeCompare(a.title);
-            }
-            if (sortBy === "members-asc") {
-                return a.team.length - b.team.length;
-            }
-            if (sortBy === "members-desc") {
-                return b.team.length - a.team.length;
-            }
-            return 0;
-        });
 
     const exportTeams = async () => {
         try {
@@ -275,53 +236,31 @@ export default function Dashboard() {
 
             <div className="space"></div>
 
-            {loading && (
-                <div className="center-align">
-                    <progress className="circle wavy large"></progress>
-                    <p>Ładowanie tematów...</p>
-                </div>
-            )}
+            {loading && <LoadingInformation message="Ładowanie tematów..." />}
 
-            {error && (
-                <article className="border error">
-                    <div>
-                        <i className="extra">error</i>
-                        <h6>Błąd</h6>
-                        <p>{error}</p>
-                    </div>
-                </article>
-            )}
+            {error && <NotificationBox message={error} isError={true} />}
 
             {!loading && !error && topics.length === 0 && (
-                <article className="border">
-                    <i className="extra">info</i>
-                    <div>
-                        <h6>Brak tematów</h6>
-                        <p>Nie znaleziono żadnych tematów.</p>
-                    </div>
-                </article>
+                <NotificationBox
+                    customHeader="Brak tematów"
+                    message="Nie znaleziono żadnych tematów."
+                />
             )}
 
             {!loading &&
                 !error &&
                 topics.length > 0 &&
                 filteredTopics.length === 0 && (
-                    <article className="border">
-                        <i className="extra">info</i>
-                        <div>
-                            <h6>Brak wyników</h6>
-                            <p>
-                                Nie znaleziono tematów spełniających wybrane
-                                kryteria.
-                            </p>
-                        </div>
-                    </article>
+                    <NotificationBox
+                        customHeader="Brak wyników"
+                        message="Nie znaleziono tematów spełniających wybrane kryteria."
+                    />
                 )}
 
             {!loading && !error && filteredTopics.length > 0 && (
                 <ul className="list border medium-space">
                     {filteredTopics.map((topic) => (
-                        <ProjectListItem
+                        <TopicListItem
                             key={topic.id}
                             id={topic.id}
                             slots={

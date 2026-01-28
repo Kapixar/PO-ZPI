@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { topicService, type PendingTopic } from "~/services/topic.service";
 import { PendingTopicCard } from "~/components/PendingTopicCard";
 import type { Route } from "../+types/root";
+import { NotificationBox } from "~/components/NotificationBox";
+import { LoadingInformation } from "~/components/LoadingInformation";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -204,21 +206,10 @@ export default function Dashboard() {
             <div className="space"></div>
 
             {loading && (
-                <div className="center-align">
-                    <progress className="circle wavy large"></progress>
-                    <p>Ładowanie tematów...</p>
-                </div>
+                <LoadingInformation message="Ładowanie tematów oczekujących..." />
             )}
 
-            {error && (
-                <article className="border error">
-                    <div>
-                        <i className="extra">error</i>
-                        <h6>Błąd</h6>
-                        <p>{error}</p>
-                    </div>
-                </article>
-            )}
+            {error && <NotificationBox message={error} isError={true} />}
 
             {!loading && !error && (
                 <>
