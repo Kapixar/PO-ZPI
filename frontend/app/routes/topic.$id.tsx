@@ -4,6 +4,7 @@ import { UserRole, useUser } from "~/contexts/UserContext";
 import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
 import { useNavigate } from "react-router";
+import { formatDate } from "~/utility/util";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -16,9 +17,10 @@ interface TeamMemberProps {
     name: string;
     index: string;
     isStudent?: boolean;
+    showDeclarationLack?: boolean;
 }
 
-function TeamMember({ name, index, isStudent }: TeamMemberProps) {
+function TeamMember({ name, index, isStudent, showDeclarationLack }: TeamMemberProps) {
     const icon = isStudent ? "school" : "face";
     return (
         <div className="center-align">
@@ -26,8 +28,9 @@ function TeamMember({ name, index, isStudent }: TeamMemberProps) {
                 style={{ "--_size": "7rem" } as React.CSSProperties}
                 className="fill"
             >
-                { icon }
+                {icon}
             </i>
+            {showDeclarationLack && <span className="badge no-round border">nie złożono deklaracji</span>}
             <div className="center-align">
                 <h6 className="small bold">{name}</h6>
                 <div className="medium-text">{index}</div>
@@ -113,17 +116,18 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
         loadTopic();
     }, [params.id]);
 
-    const currentTeamMember = topic?.team.find((member) => {
+    const currentTeamMemberUser = topic?.team.find((member) => {
         if (!user.user_id) return false;
+
         const memberAccountId = member.accountId;
         const memberIdNumber =
             typeof member.id === "string" ? Number(member.id) : member.id;
         return (
-            memberAccountId === user.user_id ||
-            memberIdNumber === user.user_id ||
-            member.studentIndex === String(user.user_id)
+            memberAccountId === user.user_id || memberIdNumber === user.user_id
         );
     });
+
+    console.log("topci", loading);
 
     const isSupervisor = Boolean(
         user.user_id &&
@@ -134,14 +138,16 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
                 : topic.supervisor.id) === user.user_id),
     );
 
-    const canManageDeclaration =
-        (hasRole(UserRole.Student) && currentTeamMember) ||
+    const isUserTeamMember =
+        Boolean(currentTeamMemberUser) ||
         (hasRole(UserRole.Teacher) && isSupervisor);
+
+    console.log(currentTeamMemberUser);
 
     const isDeclarationApproved =
         submitSuccess ||
-        Boolean(currentTeamMember?.isDeclarationApproved) ||
-        currentTeamMember?.declaration?.status === "ZLOZONA" ||
+        Boolean(currentTeamMemberUser?.isDeclarationApproved) ||
+        currentTeamMemberUser?.declaration?.status === "ZLOZONA" ||
         (isSupervisor && topic?.declaration?.status === "ZLOZONA");
 
     const handleSubmitDeclaration = async () => {
@@ -173,153 +179,151 @@ export default function TopicDetail({ params }: Route.ComponentProps) {
     };
 
     return (
-        <div className="">
-            <SideBar />
-            <main className="rounded-2xl large-padding">
-                <ApproveDialog
-                    onConfirm={handleSubmitDeclaration}
-                    isSubmitting={isSubmitting}
-                />
-                <nav>
-                    <button
-                        className="circle transparent"
-                        onClick={() => navigate(-1)}
-                    >
-                        <i>arrow_back</i>
-                    </button>
-                    <div className="max"></div>
-                    <button className="circle transparent">
-                        <i>more_vert</i>
-                    </button>
-                </nav>
+        <div>
+            <ApproveDialog
+                onConfirm={handleSubmitDeclaration}
+                isSubmitting={isSubmitting}
+            />
+            <nav>
+                <button
+                    className="circle transparent"
+                    onClick={() => navigate(-1)}
+                >
+                    <i>arrow_back</i>
+                </button>
+                <div className="max"></div>
+                <button className="circle transparent">
+                    <i>more_vert</i>
+                </button>
+            </nav>
 
-                {loading && (
-                    <div className="center-align">
-                        <progress className="circle wavy large"></progress>
-                        <p>Ładowanie tematu...</p>
+            {loading && (
+                <div className="center-align">
+                    <progress className="circle wavy large"></progress>
+                    <p>Ładowanie tematu...</p>
+                </div>
+            )}
+
+            {error && (
+                <article className="border error">
+                    <div>
+                        <i className="extra">error</i>
+                        <h6>Błąd</h6>
+                        <p>{error}</p>
                     </div>
-                )}
+                </article>
+            )}
 
-                {error && (
-                    <article className="border error">
-                        <div>
-                            <i className="extra">error</i>
-                            <h6>Błąd</h6>
-                            <p>{error}</p>
-                        </div>
-                    </article>
-                )}
+            {submitSuccess && (
+                <article className="border">
+                    <div>
+                        <i className="extra">check_circle</i>
+                        <h6>Sukces</h6>
+                        <p>Deklaracja została pomyślnie złożona!</p>
+                    </div>
+                </article>
+            )}
 
-                {submitSuccess && (
-                    <article className="border">
-                        <div>
-                            <i className="extra">check_circle</i>
-                            <h6>Sukces</h6>
-                            <p>Deklaracja została pomyślnie złożona!</p>
-                        </div>
-                    </article>
-                )}
+            {!loading && !error && topic && (
+                <>
+                    <h3>{topic.title}</h3>
 
-                {!loading && !error && topic && (
-                    <>
-                        <h3>{topic.title}</h3>
+                    <p>{topic.description}</p>
 
-                        <p>{topic.description}</p>
-
-                        <h5>Zespół</h5>
-                        <div className="flex flex-row gap-10">
+                    <h5>Zespół</h5>
+                    <div className="flex flex-row gap-10">
+                        <TeamMember
+                            name={`${topic.supervisor.fullName}`}
+                            index={topic.supervisor.title}
+                            isStudent={false}
+                            showDeclarationLack={isUserTeamMember && !isDeclarationApproved}
+                        />
+                        {topic.team.map((student) => (
                             <TeamMember
-                                name={`${topic.supervisor.fullName}`}
-                                index={topic.supervisor.title}
-                                isStudent={false}
+                                key={student.id}
+                                name={`${student.fullName}`}
+                                index={student.studentIndex}
+                                isStudent={true}
+                                showDeclarationLack={isUserTeamMember && !student.isDeclarationApproved}
                             />
-                            {topic.team.map((student) => (
-                                <TeamMember
-                                    key={student.id}
-                                    name={`${student.fullName}`}
-                                    index={student.studentIndex}
-                                    isStudent={true}
-                                />
-                            ))}
-                        </div>
+                        ))}
+                    </div>
 
-                        {(canManageDeclaration ||
-                            hasRole(UserRole.Teacher)) && (
-                            <>
-                                <h5>Zarządzanie</h5>
+                    {(isSupervisor || isUserTeamMember) && (
+                        <>
+                            <h5>Zarządzanie</h5>
 
-                                <nav className="group">
-                                    {canManageDeclaration && (
-                                        <button
-                                            className="fill small-round"
-                                            disabled={isDeclarationApproved}
-                                            data-ui="#approve-declaration-dialog"
-                                        >
-                                            <i>check_box</i>
-                                            <span>Zatwierdź deklarację</span>
+                            <nav className="group">
+                                {isUserTeamMember && (
+                                    <button
+                                        className="fill small-round"
+                                        disabled={isDeclarationApproved}
+                                        data-ui="#approve-declaration-dialog"
+                                    >
+                                        <i>check_box</i>
+                                        <span>
+                                            {isDeclarationApproved
+                                                ? "Deklaracja zatwierdzona"
+                                                : "Zatwierdź deklarację"}
+                                        </span>
+                                    </button>
+                                )}
+                                {hasRole(UserRole.Teacher) && (
+                                    <>
+                                        <button className="fill small-round">
+                                            <i>format_size</i>
+                                            <span>
+                                                Uzasadnij niestandardowy rozmiar
+                                                zespołu
+                                            </span>
                                         </button>
-                                    )}
-                                    {hasRole(UserRole.Teacher) && (
-                                        <>
-                                            <button className="fill small-round">
-                                                <i>format_size</i>
-                                                <span>
-                                                    Uzasadnij niestandardowy
-                                                    rozmiar zespołu
-                                                </span>
-                                            </button>
-                                            <button className="fill small-round">
-                                                <i>group</i>
-                                                <span>Zmień stan</span>
-                                            </button>
-                                        </>
-                                    )}
-                                </nav>
-                            </>
-                        )}
+                                        <button className="fill small-round">
+                                            <i>group</i>
+                                            <span>Zmień stan</span>
+                                        </button>
+                                    </>
+                                )}
+                            </nav>
+                        </>
+                    )}
 
-                        <h5>Informacje</h5>
-                        <ul className="list border">
-                            <li>
-                                <div className="max">
-                                    <h6 className="small">Stan zespołu</h6>
-                                    <div>
-                                        {topic.isOpen
-                                            ? "Oczekuje na nowych członków"
-                                            : "Zespół kompletny"}
-                                    </div>
+                    <h5>Informacje</h5>
+                    <ul className="list border">
+                        <li>
+                            <div className="max">
+                                <h6 className="small">Stan zespołu</h6>
+                                <div>
+                                    {topic.isOpen
+                                        ? "Oczekuje na nowych członków"
+                                        : "Zespół kompletny"}
                                 </div>
-                            </li>
-                            <li>
-                                <div className="max">
-                                    <h6 className="small">Status tematu</h6>
-                                    <div>{topic.status}</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div className="max">
-                                    <h6 className="small">
-                                        Liczba członków zespołu
-                                    </h6>
-                                    <div>{topic.team.length}</div>
-                                </div>
-                            </li>
-                            <li>
-                                <div className="max">
-                                    <h6 className="small">
-                                        Data utworzenia tematu
-                                    </h6>
-                                    <div>
-                                        {new Date(
-                                            topic.creationDate,
-                                        ).toLocaleDateString("pl-PL")}
-                                    </div>
-                                </div>
-                            </li>
-                        </ul>
-                    </>
-                )}
-            </main>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="max">
+                                <h6 className="small">Status tematu</h6>
+                                <div>{topic.status}</div>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="max">
+                                <h6 className="small">
+                                    Liczba członków zespołu
+                                </h6>
+                                <div>{topic.team.length}</div>
+                            </div>
+                        </li>
+                        <li>
+                            <div className="max">
+                                <h6 className="small">
+                                    Data utworzenia tematu
+                                </h6>
+                                <div>{formatDate(topic.creationDate)}</div>
+                            </div>
+                        </li>
+                    </ul>
+                </>
+            )}
         </div>
     );
 }
