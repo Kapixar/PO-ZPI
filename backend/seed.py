@@ -132,6 +132,41 @@ def seed_data():
     db.session.flush()
     for _ in range(4): students.pop().topic_id = topic_std.id
 
+
+    # Marek Nocny (PROFESOR_UCZELNI, Limit 2) -> Usage: 1/2
+    topic_std_mn1 = Topic(
+        title="System monitorowania jakości powietrza w budynkach użyteczności publicznej",
+        description="Aplikacja do zbierania danych z czujników i wizualizacji poziomu zanieczyszczeń.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[6].id, # Marek Nocny
+        creation_date=datetime.now() - timedelta(days=3),
+        topic_justification=None
+    )
+    db.session.add(topic_std_mn1)
+    teacher_loads[teachers[6].id] += 1
+
+    db.session.flush()
+    for _ in range(4): students.pop().topic_id = topic_std_mn1.id
+
+    # Marek Nocny (PROFESOR_UCZELNI, Limit 2) -> Usage: 2/2 (MAX REACHED)
+    topic_std_mn2 = Topic(
+        title="Portal społecznościowy dla miłośników fotografii analogowej",
+        description="Platforma umożliwiająca wymianę zdjęć, organizację wystaw online i dyskusję o technikach fotograficznych.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[6].id, # Marek Nocny
+        creation_date=datetime.now() - timedelta(days=4),
+        topic_justification=None
+    )
+    db.session.add(topic_std_mn2)
+    teacher_loads[teachers[6].id] += 1
+
+    db.session.flush()
+    for _ in range(4): students.pop().topic_id = topic_std_mn2.id
+
+
+
     # --- SCENARIO B: Non-Standard Pending Topic ---
     # Michał Ślimak (ADIUNKT, Limit 2) -> Usage: 1/2
     topic_ns_small = Topic(
