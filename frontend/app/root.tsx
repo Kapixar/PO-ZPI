@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { UserProvider } from "./contexts/UserContext";
+import { SideBar } from "./components/SideBar";
 
 export const links: Route.LinksFunction = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -44,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     src="https://cdn.jsdelivr.net/npm/beercss@3.13.1/dist/cdn/beer.min.js"
                 ></script>
             </head>
-            <body className="light surface-container">
+            <body className="light">
                 {children}
                 <ScrollRestoration />
                 <Scripts />
@@ -56,7 +57,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
     return (
         <UserProvider>
-            <Outlet />
+            <SideBar />
+            <main className="rounded-2xl large-padding">
+                <Outlet />
+            </main>
         </UserProvider>
     );
 }
