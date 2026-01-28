@@ -6,9 +6,7 @@ import { useEffect, useState } from "react";
 import { topicService, type Topic } from "~/services/topic.service";
 import { exportService } from "~/services/export.service";
 
-
-
-export function meta({ }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
     return [
         { title: "New React Router App" },
         { name: "description", content: "Welcome to React Router!" },
@@ -24,8 +22,12 @@ export default function Dashboard() {
     const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
     // Filter states
-    const [sortBy, setSortBy] = useState<"date" | "title" | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<
+        "title-asc" | "title-desc" | "members-asc" | "members-desc" | null
+    >(null);
     const [showOpenOnly, setShowOpenOnly] = useState(false);
+    const [showApprovedOnly, setShowApprovedOnly] = useState(false);
     const [minMembers, setMinMembers] = useState<number | null>(null);
     const [maxMembers, setMaxMembers] = useState<number | null>(null);
 
@@ -55,26 +57,52 @@ export default function Dashboard() {
     // Filter and sort topics
     const filteredTopics = topics
         .filter((topic) => {
-            if (showOpenOnly && !topic.isOpen) return false;
-            if (minMembers !== null && topic.maxMembers < minMembers)
+            // Search filter
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                const matchesTitle = topic.title.toLowerCase().includes(query);
+                const matchesSupervisor =
+                    `${topic.supervisor.title} ${topic.supervisor.fullName}`
+                        .toLowerCase()
+                        .includes(query);
+                if (!matchesTitle && !matchesSupervisor) return false;
+            }
+
+            console.log(topic);
+            
+
+            // Open status filter
+            if (showOpenOnly && !topic.isOpen)
                 return false;
-            if (maxMembers !== null && topic.maxMembers > maxMembers)
+
+            // Approved status filter
+            if (showApprovedOnly && topic.status !== "ZATWIERDZONY") return false;
+
+            // Min members filter
+            if (minMembers !== null && topic.team.length < minMembers)
                 return false;
+
+            // Max members filter
+            if (maxMembers !== null && topic.team.length > maxMembers)
+                return false;
+
             return true;
         })
         .sort((a, b) => {
-            if (sortBy === "date") {
-                return (
-                    new Date(b.creationDate).getTime() -
-                    new Date(a.creationDate).getTime()
-                );
-            }
-            if (sortBy === "title") {
+            if (sortBy === "title-asc") {
                 return a.title.localeCompare(b.title);
+            }
+            if (sortBy === "title-desc") {
+                return b.title.localeCompare(a.title);
+            }
+            if (sortBy === "members-asc") {
+                return a.team.length - b.team.length;
+            }
+            if (sortBy === "members-desc") {
+                return b.team.length - a.team.length;
             }
             return 0;
         });
-
 
     const exportTeams = async () => {
         try {
@@ -82,13 +110,13 @@ export default function Dashboard() {
             setShowDownloadDialog(false);
             setShowSuccessDialog(true);
         } catch (error) {
-            setError("download error")
+            setError("download error");
         }
-    }
+    };
 
     const onDownloadClick = () => {
-        setShowDownloadDialog(true)
-    }
+        setShowDownloadDialog(true);
+    };
 
     return (
         <div className="">
@@ -117,99 +145,143 @@ export default function Dashboard() {
                         : "Lista tematów ZPI"}
                 </h3>
 
-                {/* Sort Menu */}
-                <menu className="no-wrap">
-                    <a data-ui="#sort-menu">
-                        <i>arrow_drop_down</i>
-                    </a>
-                    <div id="sort-menu" className="menu">
-                        <a onClick={() => setSortBy(null)}>
-                            <i>{sortBy === null ? "check" : ""}</i>
-                            <span>Domyślnie</span>
-                        </a>
-                        <a onClick={() => setSortBy("date")}>
-                            <i>{sortBy === "date" ? "check" : ""}</i>
-                            <span>Data utworzenia</span>
-                        </a>
-                        <a onClick={() => setSortBy("title")}>
-                            <i>{sortBy === "title" ? "check" : ""}</i>
-                            <span>Tytuł</span>
-                        </a>
+                <nav className="wrap">
+                    <i>filter_list</i>
+                    <div className="field small prefix border-[.0625rem] border-(--outline-variant) round">
+                        <i className="front">search</i>
+                        <input
+                            className="no-elevate"
+                            placeholder="Szukaj..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                </menu>
-
-                {/* Min Members Menu */}
-                <menu className="no-wrap">
-                    <a data-ui="#min-menu">
-                        <i>arrow_drop_down</i>
-                    </a>
-                    <div id="min-menu" className="menu">
-                        <a onClick={() => setMinMembers(null)}>
-                            <i>{minMembers === null ? "check" : ""}</i>
-                            <span>Wszystkie</span>
-                        </a>
-                        {[3, 4, 5].map((num) => (
-                            <a key={num} onClick={() => setMinMembers(num)}>
-                                <i>{minMembers === num ? "check" : ""}</i>
-                                <span>Min {num} osób</span>
-                            </a>
-                        ))}
+                    <div>
+                        <button className="chip medium">
+                            <span>
+                                {sortBy
+                                    ? "Sortuj: " +
+                                      (sortBy === "title-asc"
+                                          ? "Nazwa ↑"
+                                          : sortBy === "title-desc"
+                                            ? "Nazwa ↓"
+                                            : sortBy === "members-asc"
+                                              ? "Liczba osób ↑"
+                                              : "Liczba osób ↓")
+                                    : "Sortuj"}
+                            </span>
+                            <i>arrow_drop_down</i>
+                        </button>
+                        <menu className="">
+                            <li onClick={() => setSortBy("title-asc")}>
+                                <span>Nazwa ↑</span>
+                            </li>
+                            <li onClick={() => setSortBy("title-desc")}>
+                                <span>Nazwa ↓</span>
+                            </li>
+                            <li onClick={() => setSortBy("members-asc")}>
+                                <span>Liczba osób ↑</span>
+                            </li>
+                            <li onClick={() => setSortBy("members-desc")}>
+                                <span>Liczba osób ↓</span>
+                            </li>
+                            {sortBy && <div className="divider"></div>}
+                            {sortBy && (
+                                <li onClick={() => setSortBy(null)}>
+                                    <i>clear</i>
+                                    <span>Wyczyść</span>
+                                </li>
+                            )}
+                        </menu>
                     </div>
-                </menu>
-
-                {/* Max Members Menu */}
-                <menu className="no-wrap">
-                    <a data-ui="#max-menu">
-                        <i>arrow_drop_down</i>
-                    </a>
-                    <div id="max-menu" className="menu">
-                        <a onClick={() => setMaxMembers(null)}>
-                            <i>{maxMembers === null ? "check" : ""}</i>
-                            <span>Wszystkie</span>
-                        </a>
-                        {[3, 4, 5].map((num) => (
-                            <a key={num} onClick={() => setMaxMembers(num)}>
-                                <i>{maxMembers === num ? "check" : ""}</i>
-                                <span>Max {num} osób</span>
-                            </a>
-                        ))}
-                    </div>
-                </menu>
-
-                <nav className="scroll ground">
                     <button
-                        className={`chip ${sortBy !== null ? "fill" : ""}`}
-                        data-ui="#sort-menu"
-                    >
-                        {sortBy === null
-                            ? "Sortuj"
-                            : sortBy === "date"
-                              ? "Data"
-                              : "Tytuł"}
-                    </button>
-                    <button
-                        className={`chip ${showOpenOnly ? "fill" : ""}`}
+                        className={`chip medium ${showOpenOnly ? "fill" : ""}`}
                         onClick={() => setShowOpenOnly(!showOpenOnly)}
                     >
-                        Otwarty
+                        {showOpenOnly && <i>check</i>}
+                        <span>Otwarty</span>
                     </button>
                     <button
-                        className={`chip ${minMembers !== null ? "fill" : ""}`}
-                        data-ui="#min-menu"
+                        className={`chip medium ${showApprovedOnly ? "fill" : ""}`}
+                        onClick={() => setShowApprovedOnly(!showApprovedOnly)}
                     >
-                        {minMembers !== null
-                            ? `Min ${minMembers} osób`
-                            : "Min liczba osób"}
+                        {showApprovedOnly && <i>check</i>}
+                        <span>Zatwierdzony</span>
                     </button>
-                    <button
-                        className={`chip ${maxMembers !== null ? "fill" : ""}`}
-                        data-ui="#max-menu"
-                    >
-                        {maxMembers !== null
-                            ? `Max ${maxMembers} osób`
-                            : "Max liczba osób"}
-                    </button>
+                    <div>
+                        <button className="chip medium">
+                            <span>
+                                {minMembers !== null
+                                    ? `Min: ${minMembers}`
+                                    : "Min liczba osób"}
+                            </span>
+                            <i>arrow_drop_down</i>
+                        </button>
+                        <menu className="">
+                            <li onClick={() => setMinMembers(1)}>
+                                <span>1</span>
+                            </li>
+                            <li onClick={() => setMinMembers(2)}>
+                                <span>2</span>
+                            </li>
+                            <li onClick={() => setMinMembers(3)}>
+                                <span>3</span>
+                            </li>
+                            <li onClick={() => setMinMembers(4)}>
+                                <span>4</span>
+                            </li>
+                            <li onClick={() => setMinMembers(5)}>
+                                <span>5</span>
+                            </li>
+                            {minMembers !== null && (
+                                <div className="divider"></div>
+                            )}
+                            {minMembers !== null && (
+                                <li onClick={() => setMinMembers(null)}>
+                                    <i>clear</i>
+                                    <span>Wyczyść</span>
+                                </li>
+                            )}
+                        </menu>
+                    </div>
+                    <div>
+                        <button className="chip medium">
+                            <span>
+                                {maxMembers !== null
+                                    ? `Max: ${maxMembers}`
+                                    : "Max liczba osób"}
+                            </span>
+                            <i>arrow_drop_down</i>
+                        </button>
+                        <menu className="">
+                            <li onClick={() => setMaxMembers(1)}>
+                                <span>1</span>
+                            </li>
+                            <li onClick={() => setMaxMembers(2)}>
+                                <span>2</span>
+                            </li>
+                            <li onClick={() => setMaxMembers(3)}>
+                                <span>3</span>
+                            </li>
+                            <li onClick={() => setMaxMembers(4)}>
+                                <span>4</span>
+                            </li>
+                            <li onClick={() => setMaxMembers(5)}>
+                                <span>5</span>
+                            </li>
+                            {maxMembers !== null && (
+                                <div className="divider"></div>
+                            )}
+                            {maxMembers !== null && (
+                                <li onClick={() => setMaxMembers(null)}>
+                                    <i>clear</i>
+                                    <span>Wyczyść</span>
+                                </li>
+                            )}
+                        </menu>
+                    </div>
                 </nav>
+
                 <div className="space"></div>
 
                 {loading && (
