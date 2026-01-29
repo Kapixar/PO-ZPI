@@ -45,33 +45,18 @@ def get_pending_topics():
             'message': str(e)
         }), 500
 
-# Helper to get default teacher (for demo purposes)
-def get_default_teacher():
-    teacher = Teacher.query.first()
-    if not teacher:
-        # Create a dummy teacher if none exists (demo)
-        from app.models.account import Account
-        # assuming Account exists? Use try/except
-        try:
-           account = Account.query.first()
-           if not account:
-               account = Account(login="user", password="pw", role="TEACHER") # logic might differ
-               db.session.add(account)
-               db.session.commit()
-           
-           teacher = Teacher(account_id=account.id)
-           db.session.add(teacher)
-           db.session.commit()
-        except:
-           pass 
-    return teacher
-
 @topics_bp.route('', methods=['GET'])
 def get_topics():
     supervisor_id = request.args.get('supervisor_id')
     query = Topic.query
     if supervisor_id:
-        query = query.filter_by(teacher_id=supervisor_id)
+        # supervisor_id is the account_id, need to find the teacher first
+        teacher = Teacher.query.filter_by(account_id=supervisor_id).first()
+        if teacher:
+            query = query.filter_by(teacher_id=teacher.id)
+        else:
+            # No teacher found for this account, return empty list
+            return jsonify([])
     
     topics = query.all()
     return jsonify([t.to_dict() for t in topics])
@@ -85,14 +70,21 @@ def get_topic(id):
 def create_topic():
     data = request.get_json()
     
-    teacher = get_default_teacher() # In real app, from Auth
+    # Require supervisor_id from request
+    supervisor_id = data.get('supervisor_id')
+    if not supervisor_id:
+        return jsonify({'error': 'supervisor_id is required'}), 400
+    
+    teacher = Teacher.query.filter_by(account_id=supervisor_id).first()
+    if not teacher:
+        return jsonify({'error': 'Teacher not found for the given supervisor_id'}), 404
     
     new_topic = Topic(
         title=data['title'],
         description=data.get('description', ''),
         status=TopicStatus.OCZEKUJACY,
         is_open=True,
-        teacher_id=teacher.id if teacher else None,
+        teacher_id=teacher.id,
         topic_justification=data.get('topicJustification', '')
     )
     
@@ -112,6 +104,7 @@ def get_me():
         'id': teacher.id,
         'fullName': teacher.account.full_name if teacher.account else 'Michał Ślimak',
         'title': teacher.title.value if teacher.title else 'dr',
+        'position': teacher.position.name if teacher.position else 'ADIUNKT',
         'avatar': 'https://ui-avatars.com/api/?name=Michal+Slimak&background=random'
     })
 
@@ -231,11 +224,12 @@ def approve_topic(topic_id):
     Approve a single topic.
     Changes status to ZATWIERDZONY.
     """
+    topic = Topic.query.get(topic_id)
+    if not topic:
+        return jsonify({'error': 'Topic not found'}), 404
+    
     try:
-        topic = Topic.query.get_or_404(topic_id)
-        
         topic.status = TopicStatus.ZATWIERDZONY
-        # Optionally clear rejection reason if it was previously rejected
         topic.rejection_reason = None 
         
         db.session.commit()
@@ -259,14 +253,16 @@ def approve_topics_bulk():
     Approve multiple topics at once.
     Expects JSON: { "topic_ids": [1, 2, 3] }
     """
+    data = request.get_json()
+    if data is None:
+        return jsonify({'message': 'No topics provided'}), 400
+    
     try:
-        data = request.get_json() or {}
         topic_ids = data.get('topic_ids', [])
         
         if not topic_ids:
             return jsonify({'message': 'No topics provided'}), 400
 
-        # Update all topics with IDs in the list
         updated_count = Topic.query.filter(Topic.id.in_(topic_ids)).update(
             {Topic.status: TopicStatus.ZATWIERDZONY},
             synchronize_session=False
@@ -294,8 +290,11 @@ def reject_topic(topic_id):
     Expects JSON: { "rejection_reason": "Reason here..." }
     Changes status to ODRZUCONY and saves the reason.
     """
+    topic = Topic.query.get(topic_id)
+    if not topic:
+        return jsonify({'error': 'Topic not found'}), 404
+    
     try:
-        topic = Topic.query.get_or_404(topic_id)
         data = request.get_json() or {}
         
         reason = data.get('rejection_reason')

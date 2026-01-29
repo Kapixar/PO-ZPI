@@ -11,7 +11,7 @@ import { useNavigate } from "react-router";
 import { TopicListItem } from "~/components/topic-list/ProjectListItem";
 import { useUser } from "~/contexts/UserContext";
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
     return [{ title: "Mój profil" }];
 }
 
@@ -19,7 +19,7 @@ export function meta({}: Route.MetaArgs) {
 const getMaxTopics = (position: string = ""): number => {
     // Asystent: max 1 temat, Pozostali: max 2 tematy
     if (position === "ASYSTENT") return 1;
-    return 5;
+    return 2;
 };
 
 export default function MyProfile() {
@@ -75,9 +75,7 @@ export default function MyProfile() {
             <div className="padding">
                 {/* Dane prowadzącego */}
                 <h5 className="mb-2">
-                    {supervisor
-                        ? `${supervisor.title} ${supervisor.fullName}`
-                        : "Ładowanie..."}
+                    {supervisor && `${supervisor.title} ${supervisor.fullName}`}
                 </h5>
                 <div className="text-medium-emphasis mb-8 row">
                     {supervisor && (
@@ -135,7 +133,7 @@ export default function MyProfile() {
                 )}
             </div>
 
-            <CreateTopicDialog onCreated={fetchData} />
+            <CreateTopicDialog onCreated={fetchData} supervisorId={user.user_id ?? 0} />
         </div>
     );
 }

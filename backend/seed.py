@@ -22,8 +22,8 @@ def reset_db():
 
 def get_max_teams_for_position(position):
     """Zwraca maksymalną liczbę zespołów dla danego stanowiska."""
-    # Note: ASYTSTENT matches the typo in the model enum
-    if position == Position.ASYTSTENT:
+    # ASYSTENT (Assistant position) has limit of 1 team
+    if position == Position.ASYSTENT:
         return 1
     # ADIUNKT, PROFESOR_UCZELNI itp.
     return 2
@@ -64,10 +64,11 @@ def seed_data():
     teachers = [teacher_bh, teacher_ms]
     generic_teachers_data = [
         ("Jan Bąk", "j.bak", Title.dr_inz, Position.ADIUNKT),         # Limit: 2
-        ("Maria Zielińska", "m.zielinska", Title.mgr, Position.ASYTSTENT), # Limit: 1
+        ("Maria Zielińska", "m.zielinska", Title.mgr, Position.ASYSTENT), # Limit: 1
         ("Tomasz Kot", "t.kot", Title.dr, Position.ADIUNKT),          # Limit: 2
-        ("Beata Wąs", "b.was", Title.mgr_inz, Position.ASYTSTENT),    # Limit: 1
-        ("Marek Nocny", "m.nocny", Title.prof, Position.PROFESOR_UCZELNI) # Limit: 2
+        ("Beata Wąs", "b.was", Title.mgr_inz, Position.ASYSTENT),    # Limit: 1
+        ("Marek Nocny", "m.nocny", Title.prof, Position.PROFESOR_UCZELNI), # Limit: 2
+        ("Katarzyna Wolna", "k.wolna", Title.dr, Position.ADIUNKT)    # Limit: 2, No topics assigned
     ]
 
     for name, login, title, pos in generic_teachers_data:
@@ -109,6 +110,10 @@ def seed_data():
 
     # Initialize loads AFTER commit ensures IDs are generated
     teacher_loads = {t.id: 0 for t in teachers}
+    
+    # Mark Katarzyna Wolna (last teacher) as maxed out to keep her with 0 topics
+    teacher_wolna = teachers[-1]  # Last teacher added (Katarzyna Wolna)
+    teacher_loads[teacher_wolna.id] = 999  # Artificially max out to prevent random assignment
 
     # ==========================================
     # 2. TOPICS & TEAMS (SCENARIOS)
@@ -225,6 +230,104 @@ def seed_data():
     db.session.flush()
     for _ in range(3):
         if students: students.pop().topic_id = topic_open.id
+
+    # --- SCENARIO G: More Pending Topics (OCZEKUJACY) ---
+    
+    # Standard pending - Tomasz Kot (ADIUNKT, Limit 2) -> Usage: 1/2
+    topic_pend_1 = Topic(
+        title="System rezerwacji sal konferencyjnych",
+        description="Aplikacja webowa do zarządzania rezerwacjami sal w biurowcu.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[4].id,  # Tomasz Kot
+        creation_date=datetime.now() - timedelta(days=3),
+        topic_justification=None
+    )
+    db.session.add(topic_pend_1)
+    teacher_loads[teachers[4].id] += 1
+    db.session.flush()
+    for _ in range(4): 
+        if students: students.pop().topic_id = topic_pend_1.id
+
+    # Non-standard pending (3 students) - Tomasz Kot -> Usage: 2/2 (MAX)
+    topic_pend_2 = Topic(
+        title="Platforma do zarządzania wydarzeniami kulturalnymi",
+        description="System rejestracji i sprzedaży biletów online.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[4].id,  # Tomasz Kot
+        creation_date=datetime.now() - timedelta(days=4),
+        topic_justification="Mniejszy zespół ze względu na doświadczenie członków."
+    )
+    db.session.add(topic_pend_2)
+    teacher_loads[teachers[4].id] += 1
+    db.session.flush()
+    for _ in range(3): 
+        if students: students.pop().topic_id = topic_pend_2.id
+
+    # Standard pending - Marek Nocny (PROFESOR, Limit 2) -> Usage: 1/2
+    topic_pend_3 = Topic(
+        title="Analiza sentymentu w mediach społecznościowych",
+        description="Narzędzie do analizy opinii użytkowników na podstawie wpisów.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[6].id,  # Marek Nocny
+        creation_date=datetime.now() - timedelta(days=6),
+        topic_justification=None
+    )
+    db.session.add(topic_pend_3)
+    teacher_loads[teachers[6].id] += 1
+    db.session.flush()
+    for _ in range(4): 
+        if students: students.pop().topic_id = topic_pend_3.id
+
+    # Non-standard pending (5 students) - Marek Nocny -> Usage: 2/2 (MAX)
+    topic_pend_4 = Topic(
+        title="System IoT do monitorowania jakości powietrza w miastach",
+        description="Sieć czujników z dashboardem do wizualizacji danych.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[6].id,  # Marek Nocny
+        creation_date=datetime.now() - timedelta(days=7),
+        topic_justification="Rozbudowany projekt wymagający większego zespołu."
+    )
+    db.session.add(topic_pend_4)
+    teacher_loads[teachers[6].id] += 1
+    db.session.flush()
+    for _ in range(5): 
+        if students: students.pop().topic_id = topic_pend_4.id
+
+    # Standard pending - Michalina Cierpliwa -> Usage: 2/2 (MAX)
+    topic_pend_5 = Topic(
+        title="Aplikacja do śledzenia nawyków zdrowotnych",
+        description="Mobilna aplikacja do monitorowania diety i aktywności fizycznej.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teacher_bh.id,  # Michalina Cierpliwa
+        creation_date=datetime.now() - timedelta(days=9),
+        topic_justification=None
+    )
+    db.session.add(topic_pend_5)
+    teacher_loads[teacher_bh.id] += 1
+    db.session.flush()
+    for _ in range(4): 
+        if students: students.pop().topic_id = topic_pend_5.id
+
+    # Non-standard pending (3 students) - Beata Wąs (ASYSTENT, Limit 1) -> Usage: 1/1 (MAX)
+    topic_pend_6 = Topic(
+        title="Generator dokumentacji projektowej",
+        description="Narzędzie automatyzujące tworzenie dokumentacji technicznej.",
+        status=TopicStatus.OCZEKUJACY,
+        is_open=False,
+        teacher_id=teachers[5].id,  # Beata Wąs
+        creation_date=datetime.now() - timedelta(days=10),
+        topic_justification="Projekt o ograniczonym zakresie dla małego zespołu."
+    )
+    db.session.add(topic_pend_6)
+    teacher_loads[teachers[5].id] += 1
+    db.session.flush()
+    for _ in range(3): 
+        if students: students.pop().topic_id = topic_pend_6.id
 
     # ==========================================
     # 3. RANDOM FILLER DATA (Respecting Limits)

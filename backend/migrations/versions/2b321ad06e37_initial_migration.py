@@ -37,7 +37,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.Enum('mgr_inz', 'mgr', 'dr', 'dr_inz', 'dr_hab', 'dr_hab_inz', 'prof', name='title'), nullable=False),
-    sa.Column('position', sa.Enum('ASYTSTENT', 'ADIUNKT', 'PROFESOR_UCZELNI', name='position'), nullable=False),
+    sa.Column('position', sa.Enum('ASYSTENT', 'ADIUNKT', 'PROFESOR_UCZELNI', name='position'), nullable=False),
     sa.Column('is_declaration_approved', sa.Boolean(), nullable=True),
     sa.ForeignKeyConstraint(['account_id'], ['account.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),

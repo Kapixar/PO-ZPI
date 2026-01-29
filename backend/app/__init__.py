@@ -23,6 +23,7 @@ def create_app(config_name='default'):
     app.register_blueprint(export_bp)
     app.register_blueprint(users_bp)
 
-    CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": "*", "allow_headers": "*", "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]}}, supports_credentials=True)
 
     return app
+    

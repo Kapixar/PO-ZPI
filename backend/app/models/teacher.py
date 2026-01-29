@@ -11,7 +11,7 @@ class Title(enum.Enum):
     prof = "prof"
 
 class Position(enum.Enum):
-    ASYTSTENT = "ASYTSTENT"
+    ASYSTENT = "ASYSTENT"
     ADIUNKT = "ADIUNKT"
     PROFESOR_UCZELNI = "PROFESOR_UCZELNI"    
 

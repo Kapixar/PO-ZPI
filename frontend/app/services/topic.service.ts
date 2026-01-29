@@ -93,11 +93,12 @@ class TopicService {
             Topic,
             "id" | "supervisor" | "status" | "isOpen" | "team" | "creationDate"
         >,
+        supervisorId: number,
     ) {
         const res = await fetch(this.baseUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(topic),
+            body: JSON.stringify({ ...topic, supervisor_id: supervisorId }),
         });
         if (!res.ok) throw new Error("Failed to create topic");
         return res.json();

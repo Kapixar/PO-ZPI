@@ -3,9 +3,10 @@ import { topicService } from "~/services/topic.service";
 
 interface CreateTopicDialogProps {
     onCreated: () => void;
+    supervisorId: number;
 }
 
-export function CreateTopicDialog({ onCreated }: CreateTopicDialogProps) {
+export function CreateTopicDialog({ onCreated, supervisorId }: CreateTopicDialogProps) {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
 
@@ -17,7 +18,7 @@ export function CreateTopicDialog({ onCreated }: CreateTopicDialogProps) {
             description,
             isStandard: true,
             maxMembers: 4,
-        });
+        }, supervisorId);
         onCreated();
         setTitle("");
         setDescription("");
