@@ -17,7 +17,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Dashboard() {
-    const { hasRole } = useUser();
+    const { user, hasRole } = useUser();
     const [topics, setTopics] = useState<Topic[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -71,6 +71,8 @@ export default function Dashboard() {
             setError("download error");
         }
     };
+
+    console.log(user);
 
     const onDownloadClick = () => {
         setShowDownloadDialog(true);
@@ -270,6 +272,7 @@ export default function Dashboard() {
                             }
                             supervisor={`${topic.supervisor.title} ${topic.supervisor.fullName}`}
                             title={topic.title}
+                            badge={user.user_id === topic.supervisor.accountId || topic.team.some(member => member.accountId === user.user_id)}
                         />
                     ))}
                 </ul>

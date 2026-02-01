@@ -101,6 +101,7 @@ export default function MyProfile() {
                                 slots={topic.team ? topic.team.length : 0}
                                 supervisor={`${supervisor?.title} ${supervisor?.fullName}`}
                                 title={topic.title}
+                                badge={false}
                             />
                         ))
                     ) : !loading ? (
